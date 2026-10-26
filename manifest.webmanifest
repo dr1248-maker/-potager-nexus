@@ -1,0 +1,25 @@
+{
+  "name": "Potager Nexus",
+  "short_name": "Potager",
+  "description": "Carnet de jardin : fiches, étapes, lexique et rotation des cultures.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "lang": "fr",
+  "background_color": "#f7f6f2",
+  "theme_color": "#01696f",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

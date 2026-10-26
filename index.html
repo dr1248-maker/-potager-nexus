@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#01696f">
+<title>Potager Nexus — carnet de jardin</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+<style>
+:root, [data-theme="light"] {
+  --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9; --color-surface-offset:#f3f0ec;
+  --color-divider:#dcd9d5; --color-border:#d4d1ca; --color-text:#28251d; --color-text-muted:#6b6a65;
+  --color-text-faint:#a8a7a2; --color-text-inverse:#f9f8f4;
+  --color-primary:#01696f; --color-primary-hover:#0c4e54; --color-primary-highlight:#cedcd8;
+  --color-success:#437a22; --color-error:#a12c7b; --color-warning:#964219;
+  --shadow-sm:0 1px 2px oklch(0.2 0.01 80 / .06); --shadow-md:0 4px 12px oklch(0.2 0.01 80 / .08); --shadow-lg:0 12px 32px oklch(0.2 0.01 80 / .12);
+}
+[data-theme="dark"] {
+  --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#201f1d; --color-surface-offset:#1d1c1a;
+  --color-divider:#262523; --color-border:#393836; --color-text:#cdccca; --color-text-muted:#9a9996;
+  --color-text-faint:#5a5957; --color-text-inverse:#171614;
+  --color-primary:#4f98a3; --color-primary-hover:#6bb0ba; --color-primary-highlight:#26383a;
+  --color-success:#6daa45; --color-error:#d163a7; --color-warning:#d98a5c;
+  --shadow-sm:0 1px 2px oklch(0 0 0 / .2); --shadow-md:0 4px 12px oklch(0 0 0 / .3); --shadow-lg:0 12px 32px oklch(0 0 0 / .4);
+}
+:root {
+  --text-xs:clamp(.875rem,.82rem + .1vw,.9rem); --text-sm:clamp(.9375rem,.88rem + .2vw,1rem);
+  --text-base:clamp(1rem,.95rem + .25vw,1.125rem); --text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+  --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+  --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem;
+  --radius-sm:.375rem; --radius-md:.5rem; --radius-lg:.75rem; --radius-xl:1rem; --radius-full:9999px;
+  --font-body:'Satoshi','Inter',system-ui,sans-serif;
+  --ease:180ms cubic-bezier(.16,1,.3,1); --header-h:60px; --nav-w:96px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;scroll-padding-top:calc(var(--header-h) + 16px)}
+body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);line-height:1.6}
+img{display:block;max-width:100%;height:auto}
+input,button,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+button:disabled{opacity:.55;cursor:progress}
+h1,h2,h3{line-height:1.2;letter-spacing:-.02em;text-wrap:balance;font-weight:700}
+p,li{text-wrap:pretty;max-width:72ch}
+a{color:var(--color-primary)}
+:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-sm)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.muted{color:var(--color-text-muted)}
+.app-header{position:sticky;top:0;z-index:100;height:var(--header-h);display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding-inline:var(--space-4);background:var(--color-surface);border-bottom:1px solid var(--color-divider)}
+.logo{display:flex;align-items:center;gap:var(--space-2);font-weight:700;font-size:var(--text-lg);color:var(--color-text);text-decoration:none}
+.logo svg{color:var(--color-primary)}
+.header-actions{display:flex;align-items:center;gap:var(--space-2)}
+.backup-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-3) var(--space-4);background:var(--color-primary-highlight);border-bottom:1px solid var(--color-divider)}
+.backup-bar.dirty{background:color-mix(in oklab,var(--color-warning) 16%,var(--color-surface))}
+.backup-status{display:flex;align-items:flex-start;gap:var(--space-2);font-size:var(--text-sm);flex:1;min-width:230px}
+.backup-status svg{flex:none;margin-top:3px}
+.backup-bar.dirty .backup-status svg{color:var(--color-warning)}
+.backup-bar .btn{flex:1 1 auto}
+@media (min-width:768px){.backup-bar{margin-left:var(--nav-w);padding-inline:var(--space-8)}.backup-bar .btn{flex:0 0 auto}}
+.sidenav{position:fixed;z-index:90;left:0;right:0;bottom:0;display:flex;background:var(--color-surface);border-top:1px solid var(--color-divider);padding-bottom:env(safe-area-inset-bottom)}
+.sidenav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;padding:var(--space-2) var(--space-1);font-size:var(--text-xs);font-weight:500;color:var(--color-text-muted);text-decoration:none}
+.sidenav a[aria-current="page"]{color:var(--color-primary);font-weight:700}
+main{padding:var(--space-6) var(--space-4) calc(88px + env(safe-area-inset-bottom));max-width:1100px;margin-inline:auto}
+main:focus{outline:none}
+@media (max-width:767px){.btn-label{display:none}.app-header .btn-primary .btn-label{display:inline}}
+@media (min-width:768px){
+  .sidenav{top:var(--header-h);bottom:auto;right:auto;width:var(--nav-w);flex-direction:column;justify-content:flex-start;border-top:0;border-right:1px solid var(--color-divider);padding-top:var(--space-3)}
+  .sidenav a{flex:0 0 auto;min-height:72px}
+  main{margin-left:var(--nav-w);max-width:none;padding:var(--space-8) var(--space-8) var(--space-12)}
+  .main-inner{max-width:1100px}
+}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:44px;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:600;border:1px solid transparent;text-decoration:none;transition:background var(--ease),border-color var(--ease),color var(--ease)}
+.btn-primary{background:var(--color-primary);color:var(--color-text-inverse)}
+.btn-primary:hover{background:var(--color-primary-hover)}
+.btn-secondary{background:var(--color-surface-offset);color:var(--color-text);border-color:var(--color-divider)}
+.btn-secondary:hover{background:var(--color-surface-2);border-color:var(--color-border)}
+.btn-ghost{color:var(--color-text-muted);border-color:var(--color-divider)}
+.btn-ghost:hover{background:var(--color-surface-offset);color:var(--color-text)}
+.btn-danger{background:var(--color-error);color:#fff}
+.btn-danger:hover{filter:brightness(.92)}
+.btn-icon{width:44px;padding:0}
+.btn-stack{display:flex;flex-direction:column;gap:var(--space-2);align-items:stretch}
+.card{background:var(--color-surface);border:1px solid oklch(from var(--color-text) l c h / .12);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm)}
+@media (min-width:768px){.card{padding:var(--space-6)}}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:600;background:color-mix(in oklab,var(--color-primary) 12%,var(--color-surface));color:var(--color-primary);border:1px solid color-mix(in oklab,var(--color-primary) 24%,transparent)}
+.badge-ok{background:color-mix(in oklab,var(--color-success) 12%,var(--color-surface));color:var(--color-success);border-color:color-mix(in oklab,var(--color-success) 30%,transparent)}
+.chip{--h:175;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 12px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:600;text-decoration:none;color:var(--color-text);background:var(--color-surface);border:1px solid oklch(62% .12 var(--h) / .6);box-shadow:inset 0 0 0 100px oklch(62% .12 var(--h) / .12)}
+.chip:hover{box-shadow:inset 0 0 0 100px oklch(62% .12 var(--h) / .22)}
+.chip.warn{border-color:var(--color-warning)}
+.chip svg{color:var(--color-warning)}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--space-4)}
+.field>label{font-size:var(--text-sm);font-weight:600}
+.input{width:100%;min-height:44px;padding:10px 14px;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text)}
+textarea.input{min-height:96px;resize:vertical}
+.input:focus{outline:2px solid var(--color-primary);outline-offset:2px;border-color:var(--color-primary)}
+.err{display:flex;align-items:center;gap:6px;color:var(--color-error);font-size:var(--text-sm)}
+.hint{font-size:var(--text-sm);color:var(--color-text-muted)}
+.form-row{display:grid;gap:var(--space-4);grid-template-columns:1fr}
+@media (min-width:560px){.form-row{grid-template-columns:1fr 1fr}}
+.alert{display:flex;gap:var(--space-2);align-items:flex-start;padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);font-size:var(--text-sm);margin-bottom:var(--space-4);background:color-mix(in oklab,var(--color-warning) 12%,var(--color-surface));color:var(--color-warning)}
+.alert.ok{background:color-mix(in oklab,var(--color-success) 12%,var(--color-surface));color:var(--color-success)}
+.alert.bad{background:color-mix(in oklab,var(--color-error) 12%,var(--color-surface));color:var(--color-error)}
+.alert svg{flex:none;margin-top:3px}
+dialog{border:1px solid var(--color-divider);border-radius:var(--radius-xl);padding:var(--space-6);background:var(--color-surface);color:var(--color-text);width:min(640px,calc(100% - 24px));max-height:92dvh;overflow:auto;box-shadow:var(--shadow-lg);margin:auto}
+dialog::backdrop{background:oklch(0 0 0 / .5)}
+dialog h2{font-size:var(--text-lg);margin-bottom:var(--space-4)}
+dialog h3{font-size:var(--text-base);margin:var(--space-5) 0 var(--space-2)}
+.modal-actions{display:flex;gap:var(--space-3);flex-wrap:wrap;justify-content:flex-end;margin-top:var(--space-4)}
+#lightbox{padding:var(--space-3);width:min(900px,calc(100% - 16px))}
+#lightbox img{width:100%;border-radius:var(--radius-md)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:300;max-width:calc(100% - 24px);background:var(--color-text);color:var(--color-bg);padding:var(--space-3) var(--space-5);border-radius:var(--radius-xl);font-size:var(--text-sm);box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:opacity var(--ease)}
+.toast.show{opacity:1}
+@media (min-width:768px){.toast{bottom:var(--space-8)}}
+.skeleton{border-radius:var(--radius-lg);background:var(--color-surface-offset);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+.empty{padding:var(--space-8) var(--space-4);border:1px dashed var(--color-border);border-radius:var(--radius-lg);color:var(--color-text-muted)}
+.empty h3{color:var(--color-text);font-size:var(--text-lg);margin-bottom:var(--space-2)}
+.empty .btn{margin-top:var(--space-4)}
+table.diff{width:100%;border-collapse:collapse;font-size:var(--text-sm);margin:var(--space-3) 0}
+table.diff th,table.diff td{padding:var(--space-2);border-bottom:1px solid var(--color-divider);text-align:right}
+table.diff th:first-child,table.diff td:first-child{text-align:left}
+table.diff thead th{font-weight:700;color:var(--color-text-muted)}
+.steps-guide{list-style:decimal;padding-left:var(--space-6);display:flex;flex-direction:column;gap:var(--space-2)}
+.steps-guide li{max-width:none}
+.page-header{display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:flex-end;justify-content:space-between;margin-bottom:var(--space-6)}
+.page-title{font-size:var(--text-xl)}
+.page-sub{color:var(--color-text-muted);font-size:var(--text-sm)}
+.section-title{font-size:var(--text-lg);margin:var(--space-8) 0 var(--space-4);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-3)}
+.grid-2{display:grid;gap:var(--space-4);grid-template-columns:1fr}
+@media (min-width:900px){.grid-2{grid-template-columns:1fr 1fr}}
+.stats{display:grid;gap:var(--space-3);grid-template-columns:1fr 1fr;margin-bottom:var(--space-6)}
+@media (min-width:768px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-lg);padding:var(--space-4)}
+.stat dt{font-size:var(--text-xs);color:var(--color-text-muted)}
+.stat dd{font-size:var(--text-xl);font-weight:700;letter-spacing:-.02em}
+.list{list-style:none;display:flex;flex-direction:column;gap:var(--space-2)}
+.list li{max-width:none}
+.row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);border-radius:var(--radius-md);background:var(--color-surface-offset);text-decoration:none;color:inherit;min-height:44px;transition:background var(--ease)}
+.row .grow{flex:1;min-width:0}
+.row strong{display:block}
+.thumb{width:52px;height:52px;border-radius:var(--radius-md);object-fit:cover;background:var(--color-primary-highlight);color:var(--color-primary);display:flex;align-items:center;justify-content:center;flex:none}
+.letters{display:flex;flex-wrap:wrap;gap:var(--space-1);margin-bottom:var(--space-4)}
+.letters button{min-width:44px;min-height:44px;border-radius:var(--radius-md);border:1px solid var(--color-divider);font-weight:700;color:var(--color-primary)}
+.letters button:hover{background:var(--color-primary-highlight)}
+.species{margin-bottom:var(--space-6)}
+.species h2{font-size:var(--text-lg);display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
+.count{font-size:var(--text-sm);font-weight:400;color:var(--color-text-muted)}
+.var-list{list-style:none;display:grid;gap:var(--space-2);grid-template-columns:1fr}
+.var-list li{max-width:none}
+@media (min-width:768px){.var-list{grid-template-columns:1fr 1fr}}
+.var-list .row{border:1px solid var(--color-divider);background:var(--color-surface)}
+.var-list .row:hover{background:var(--color-surface-offset)}
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-3)}
+.crumbs a{color:var(--color-text-muted)}
+.plant-head{display:flex;flex-wrap:wrap;gap:var(--space-4);align-items:flex-start;justify-content:space-between}
+.plant-photo{width:100%;max-height:300px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:var(--space-4)}
+@media (min-width:768px){.plant-photo{width:240px;height:240px;float:right;margin:0 0 var(--space-4) var(--space-6)}}
+.facts{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:var(--space-3) 0}
+.pager{display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-6)}
+.steps{list-style:none;display:grid;gap:var(--space-2);grid-template-columns:1fr;margin-top:var(--space-3)}
+@media (min-width:640px){.steps{grid-template-columns:1fr 1fr}}
+.steps li{max-width:none;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);background:var(--color-surface-offset);flex-wrap:wrap}
+.steps .label-s{flex:1;font-size:var(--text-sm);min-width:120px}
+.steps .none{color:var(--color-text-faint)}
+.culture-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-3)}
+.gallery{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.gallery button{padding:0;border-radius:var(--radius-md);overflow:hidden;width:84px;height:84px}
+.gallery img{width:100%;height:100%;object-fit:cover}
+.entry{padding:var(--space-4) 0;border-bottom:1px solid var(--color-divider)}
+.entry:last-child{border-bottom:0}
+.entry img{max-width:260px;border-radius:var(--radius-md);margin-top:var(--space-2);cursor:zoom-in}
+.entry-meta{display:flex;justify-content:space-between;align-items:center;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted)}
+.bed-grid{display:grid;gap:var(--space-4);grid-template-columns:1fr}
+@media (min-width:900px){.bed-grid{grid-template-columns:1fr 1fr}}
+.bed-title{display:flex;align-items:center;gap:var(--space-3)}
+.bed-title button{padding:0;border-radius:var(--radius-md)}
+.year-row{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-top:1px solid var(--color-divider)}
+.year-row .y{width:48px;font-weight:700;flex:none}
+.year-row .cells{flex:1;display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.canvas-wrap{position:relative;height:240px}
+.pwa-hide{display:none}
+</style>
+</head>
+<body>
+<a href="#view" class="sr-only">Aller au contenu principal</a>
+
+<header class="app-header" role="banner">
+  <a href="#/home" class="logo" aria-label="Potager Nexus, accueil">
+    <i data-lucide="sprout" width="26" height="26" aria-hidden="true"></i> Potager Nexus
+  </a>
+  <div class="header-actions">
+    <button class="btn btn-ghost pwa-hide" id="btn-install" data-act="install"><i data-lucide="download" width="18" height="18" aria-hidden="true"></i><span class="btn-label">Installer</span></button>
+    <button class="btn btn-primary" data-act="new-plant"><i data-lucide="plus" width="18" height="18" aria-hidden="true"></i><span class="btn-label">Nouvelle fiche</span></button>
+    <button class="btn btn-ghost btn-icon" id="theme-toggle" aria-label="Basculer le thème"></button>
+  </div>
+</header>
+
+<div class="backup-bar" id="backup-bar" role="region" aria-label="Sauvegarde des données"></div>
+
+<nav class="sidenav" aria-label="Navigation principale">
+  <a href="#/home" data-nav="home"><i data-lucide="layout-dashboard" width="24" height="24" aria-hidden="true"></i>Accueil</a>
+  <a href="#/lexique" data-nav="lexique"><i data-lucide="book-open" width="24" height="24" aria-hidden="true"></i>Lexique</a>
+  <a href="#/jardin" data-nav="jardin"><i data-lucide="map" width="24" height="24" aria-hidden="true"></i>Jardin</a>
+  <a href="#/data" data-nav="data"><i data-lucide="database" width="24" height="24" aria-hidden="true"></i>Données</a>
+</nav>
+
+<main id="view" tabindex="-1">
+  <div class="skeleton" style="height:48px;width:50%;margin-bottom:24px"></div>
+  <div class="skeleton" style="height:96px;margin-bottom:16px"></div>
+  <div class="skeleton" style="height:240px"></div>
+</main>
+
+<dialog id="modal" aria-labelledby="modal-title"></dialog>
+<dialog id="lightbox" aria-label="Photo agrandie">
+  <img id="lightbox-img" alt="Photo agrandie" width="900" height="600">
+  <p class="hint" id="lightbox-note" style="margin-top:8px"></p>
+  <div class="modal-actions"><button class="btn btn-secondary" data-act="close-lightbox">Fermer</button></div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+
+/* =====================================================================
+   Constants & helpers
+===================================================================== */
+const APP_VERSION = 2;
+const SEED_TS = '2026-01-01T00:00:00.000Z';
+const COLLECTIONS = ['plants','cultures','beds','entries','photos'];
+const STEPS = [
+  { key:'semis',      label:'Semis',                 icon:'sprout' },
+  { key:'rempotage',  label:'Rempotage',             icon:'flower-2' },
+  { key:'plantation', label:'Plantation',            icon:'shovel' },
+  { key:'recolte1',   label:'Première récolte',      icon:'apple' },
+  { key:'recolte2',   label:'Dernière récolte',      icon:'shopping-basket' },
+  { key:'graines',    label:'Ramassage des graines', icon:'wheat' }
+];
+const FAMILIES = ['Solanacées','Cucurbitacées','Fabacées','Apiacées','Astéracées','Brassicacées','Alliacées','Amaranthacées','Poacées','Rosacées','Lamiacées','Autre'];
+const ROTATION_YEARS = 3;
+const SUN = ['Plein soleil','Mi-ombre','Ombre'];
+const BED_TYPES = ['Carré','Serre','Butte','Bac / pot','Rang en pleine terre','Verger'];
+const SPECIES_FAMILY = {
+  tomate:'Solanacées', aubergine:'Solanacées', poivron:'Solanacées', piment:'Solanacées', 'pomme de terre':'Solanacées',
+  courgette:'Cucurbitacées', concombre:'Cucurbitacées', potiron:'Cucurbitacées', courge:'Cucurbitacées', melon:'Cucurbitacées', pasteque:'Cucurbitacées',
+  haricot:'Fabacées', pois:'Fabacées', feve:'Fabacées',
+  carotte:'Apiacées', persil:'Apiacées', celeri:'Apiacées', panais:'Apiacées', fenouil:'Apiacées',
+  laitue:'Astéracées', salade:'Astéracées', chicoree:'Astéracées', endive:'Astéracées', tournesol:'Astéracées',
+  chou:'Brassicacées', radis:'Brassicacées', navet:'Brassicacées', roquette:'Brassicacées',
+  oignon:'Alliacées', ail:'Alliacées', poireau:'Alliacées', echalote:'Alliacées', ciboulette:'Alliacées',
+  betterave:'Amaranthacées', epinard:'Amaranthacées', blette:'Amaranthacées',
+  mais:'Poacées', fraisier:'Rosacées', basilic:'Lamiacées', menthe:'Lamiacées', thym:'Lamiacées'
+};
+
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-3);
+const ico = (n, s=20) => `<i data-lucide="${n}" width="${s}" height="${s}" aria-hidden="true"></i>`;
+const refreshIcons = () => { if (window.lucide) window.lucide.createIcons(); };
+const isoDate = d => new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const today = () => isoDate(new Date());
+const addDays = n => { const d = new Date(); d.setDate(d.getDate()+n); return isoDate(d); };
+const fmtDate = d => d ? new Date(d+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}) : '';
+const fmtDT = iso => iso ? new Date(iso).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+const nowISO = () => new Date().toISOString();
+const byId = (arr,id) => arr.find(x => x.id === id);
+const label = p => p ? `${p.species} ${p.variety}` : '—';
+const hue = fam => { let h=0; for (const c of String(fam||'x')) h=(h*31+c.charCodeAt(0))%360; return h; };
+const famGuess = sp => { const n = norm(sp); if (!n) return ''; if (SPECIES_FAMILY[n]) return SPECIES_FAMILY[n]; const k = Object.keys(SPECIES_FAMILY).find(k => n.startsWith(k) || (n.length>3 && k.startsWith(n))); return k ? SPECIES_FAMILY[k] : ''; };
+const slug = s => norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const famOfPlant = id => (byId(state.plants,id)||{}).family || '';
+const touch = o => { o.updatedAt = nowISO(); return o; };
+const tomb = id => { state.tombstones[id] = nowISO(); };
+const guessDevice = () => /Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/i.test(navigator.userAgent) ? 'iPhone' : 'PC';
+const makeMeta = () => ({ deviceId:uid(), deviceName:guessDevice(), lastExportAt:null, lastImportAt:null, dirty:false });
+
+/* =====================================================================
+   Storage — IndexedDB only (no localStorage)
+===================================================================== */
+const DB = {
+  db:null, ok:false,
+  open(){ return new Promise(res => { try {
+      const r = indexedDB.open('potager-nexus',1);
+      r.onupgradeneeded = () => r.result.createObjectStore('kv');
+      r.onsuccess = () => { this.db = r.result; this.ok = true; res(true); };
+      r.onerror = () => res(false); r.onblocked = () => res(false);
+    } catch(e){ res(false); } }); },
+  get(k){ return new Promise(res => { if(!this.ok) return res(null);
+      const q = this.db.transaction('kv').objectStore('kv').get(k);
+      q.onsuccess = () => res(q.result ?? null); q.onerror = () => res(null); }); },
+  set(k,v){ return new Promise(res => { if(!this.ok) return res(false);
+      try { const t = this.db.transaction('kv','readwrite'); t.objectStore('kv').put(v,k);
+        t.oncomplete = () => res(true); t.onerror = () => res(false); t.onabort = () => res(false); } catch(e){ res(false); } }); }
+};
+let state = { plants:[], cultures:[], beds:[], entries:[], photos:[], tombstones:{}, meta:makeMeta() };
+let saveTimer, backupAvailable = false;
+function persist(markDirty=true){
+  if (markDirty) state.meta.dirty = true;
+  updateBackupBar();
+  clearTimeout(saveTimer); saveTimer = setTimeout(() => DB.set('state', state), 250);
+}
+window.addEventListener('beforeunload', e => { if (state.meta && state.meta.dirty && (state.plants.length || state.cultures.length)) { e.preventDefault(); e.returnValue = ''; } });
+
+/* =====================================================================
+   Photos — full (1280px) + thumbnail (320px)
+===================================================================== */
+const loadImage = src => new Promise((res,rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Image invalide')); i.src = src; });
+const readAsDataURL = f => new Promise((res,rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(new Error('Lecture impossible')); fr.readAsDataURL(f); });
+function resizeImg(img, max, q){
+  const k = Math.min(1, max/Math.max(img.width,img.height));
+  const c = document.createElement('canvas'); c.width = Math.max(1,Math.round(img.width*k)); c.height = Math.max(1,Math.round(img.height*k));
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height); return c.toDataURL('image/jpeg', q);
+}
+async function processPhoto(file){
+  if (!file) throw new Error('Aucun fichier');
+  const img = await loadImage(await readAsDataURL(file));
+  return { full:resizeImg(img,1280,.8), thumb:resizeImg(img,320,.6) };
+}
+const photoOf = id => state.photos.find(p => p.id===id);
+const photoSrc = (id, full=false) => { const p = id && photoOf(id); return p ? (full ? (p.full||p.thumb) : (p.thumb||p.full)) : null; };
+function addPhoto(px, ownerType, base, st=state){
+  const b = slug(base) || 'photo'; let n = 1, file;
+  do { file = `${b}-${String(n).padStart(3,'0')}`; n++; } while (st.photos.some(p => p.file===file));
+  const ph = { id:uid(), file, ownerType, thumb:px.thumb, full:px.full||null, updatedAt:nowISO() };
+  st.photos.push(ph); return ph.id;
+}
+function removePhoto(id){ if (!id) return; state.photos = state.photos.filter(p => p.id!==id); tomb(id); }
+function removeItems(key, pred){
+  state[key] = state[key].filter(x => { if (pred(x)) { tomb(x.id); if (x.photo) removePhoto(x.photo); return false; } return true; });
+}
+
+/* =====================================================================
+   Normalisation (migration v1 → v2) & merge
+===================================================================== */
+async function normalizeState(s, stamp=nowISO()){
+  COLLECTIONS.forEach(k => { if (!Array.isArray(s[k])) s[k] = []; s[k].forEach(x => { if (!x.updatedAt) x.updatedAt = stamp; }); });
+  s.tombstones = (s.tombstones && typeof s.tombstones==='object') ? s.tombstones : {};
+  const owners = [['plants','fiche'],['entries','note'],['beds','emplacement']];
+  for (const [k,type] of owners) for (const o of s[k]) {
+    if (typeof o.photo === 'string' && o.photo.startsWith('data:')) {
+      try {
+        const img = await loadImage(o.photo);
+        const base = k==='beds' ? o.name : k==='plants' ? o.species : ((byId(s.plants,o.plantId)||{}).species || 'photo');
+        o.photo = addPhoto({ full:o.photo, thumb:resizeImg(img,320,.6) }, type, base, s);
+      } catch(e){ o.photo = null; }
+    }
+  }
+  for (const p of s.photos) if (!p.thumb && p.full) { try { p.thumb = resizeImg(await loadImage(p.full),320,.6); } catch(e){} }
+  s.photos = s.photos.filter(p => p.thumb || p.full);
+  return s;
+}
+function mergePhoto(newer, older){ return { ...newer, full:newer.full||older.full||null, thumb:newer.thumb||older.thumb||null }; }
+function mergeStates(L, R){
+  const out = { tombstones:{} }, stats = {};
+  const tombs = { ...L.tombstones };
+  Object.keys(R.tombstones||{}).forEach(id => { if (!tombs[id] || R.tombstones[id] > tombs[id]) tombs[id] = R.tombstones[id]; });
+  COLLECTIONS.forEach(k => {
+    const s = { added:0, updated:0, removed:0, same:0 };
+    const lm = new Map(L[k].map(x => [x.id,x])), rm = new Map((R[k]||[]).map(x => [x.id,x]));
+    out[k] = [];
+    new Set([...lm.keys(), ...rm.keys()]).forEach(id => {
+      const l = lm.get(id), r = rm.get(id), t = tombs[id];
+      const lu = l ? l.updatedAt||'' : '', ru = r ? r.updatedAt||'' : '';
+      if (t && t >= (lu > ru ? lu : ru)) { if (l) s.removed++; return; }
+      if (l && !r) { out[k].push(l); s.same++; }
+      else if (!l && r) { out[k].push(r); s.added++; }
+      else if (ru > lu) { out[k].push(k==='photos' ? mergePhoto(r,l) : r); s.updated++; }
+      else { out[k].push(k==='photos' ? mergePhoto(l,r) : l); s.same++; }
+    });
+    stats[k] = s;
+  });
+  out.tombstones = tombs;
+  return { merged:out, stats };
+}
+
+/* =====================================================================
+   Sample data
+===================================================================== */
+function seed(){
+  const Y = new Date().getFullYear();
+  const beds = [
+    {id:'b1',name:'Carré A',type:'Carré',area:4,notes:'Plein sud, sol riche en compost.'},
+    {id:'b2',name:'Carré B',type:'Carré',area:4,notes:'Sol plus lourd, drainage à surveiller.'},
+    {id:'b3',name:'Serre tunnel',type:'Serre',area:6,notes:'Culture sous abri, tomates et aubergines.'},
+    {id:'b4',name:'Butte lasagne',type:'Butte',area:3,notes:'Créée à l\u2019automne, paillée.'}
+  ];
+  const plants = [
+    {id:'p1',species:'Tomate',variety:'Red Zebra',family:'Solanacées',sun:'Plein soleil',notes:'Fruits rouges striés de jaune. Tuteurage haut, éliminer les gourmands. Semis sous abri en mars.'},
+    {id:'p2',species:'Tomate',variety:'Noire de Crimée',family:'Solanacées',sun:'Plein soleil',notes:'Grosse tomate brun-pourpre, très savoureuse. Sensible au mildiou : aérer et pailler.'},
+    {id:'p3',species:'Tomate',variety:'Cœur de Bœuf',family:'Solanacées',sun:'Plein soleil',notes:'Gros fruits côtelés, peu de graines. Récolte étalée.'},
+    {id:'p4',species:'Courgette',variety:'Verte de Milan',family:'Cucurbitacées',sun:'Plein soleil',notes:'Très productive. Récolter jeune, 1 à 2 fois par semaine.'},
+    {id:'p5',species:'Haricot',variety:'Contender (nain)',family:'Fabacées',sun:'Plein soleil',notes:'Haricot vert sans fil. Semis direct dès que le sol atteint 12 °C.'},
+    {id:'p6',species:'Carotte',variety:'Nantaise 2',family:'Apiacées',sun:'Plein soleil',notes:'Semer clair, éclaircir à 3 cm. Sol meuble sans fumure fraîche.'},
+    {id:'p7',species:'Laitue',variety:'Batavia Reine des Glaces',family:'Astéracées',sun:'Mi-ombre',notes:'Résiste à la chaleur. Semis échelonnés toutes les 3 semaines.'},
+    {id:'p8',species:'Poireau',variety:'Bleu de Solaize',family:'Alliacées',sun:'Plein soleil',notes:'Variété rustique d\u2019hiver. Repiquer en juillet, butter en cours de culture.'}
+  ];
+  const c = (id,plantId,year,bedId,qty,kg,dates) => ({id,plantId,year,bedId,qty,harvestKg:kg,dates});
+  const cultures = [
+    c('c1','p2',Y-2,'b1',4,16,{semis:`${Y-2}-03-10`,rempotage:`${Y-2}-04-08`,plantation:`${Y-2}-05-14`,recolte1:`${Y-2}-07-22`,recolte2:`${Y-2}-09-30`,graines:`${Y-2}-09-20`}),
+    c('c2','p4',Y-2,'b2',3,22,{semis:`${Y-2}-04-20`,plantation:`${Y-2}-05-18`,recolte1:`${Y-2}-06-30`,recolte2:`${Y-2}-09-25`}),
+    c('c3','p5',Y-1,'b1',40,6.5,{semis:`${Y-1}-05-12`,recolte1:`${Y-1}-07-05`,recolte2:`${Y-1}-08-28`,graines:`${Y-1}-09-15`}),
+    c('c4','p6',Y-1,'b2',200,9,{semis:`${Y-1}-04-02`,recolte1:`${Y-1}-06-25`,recolte2:`${Y-1}-09-10`}),
+    c('c5','p3',Y-1,'b3',3,18,{semis:`${Y-1}-03-05`,rempotage:`${Y-1}-04-02`,plantation:`${Y-1}-05-05`,recolte1:`${Y-1}-07-15`,recolte2:`${Y-1}-10-05`}),
+    c('c6','p4',Y,'b1',2,19,{semis:`${Y}-04-22`,plantation:`${Y}-05-20`,recolte1:`${Y}-06-28`,recolte2:`${Y}-09-20`}),
+    c('c7','p1',Y,'b2',4,14.5,{semis:`${Y}-03-08`,rempotage:`${Y}-04-05`,plantation:`${Y}-05-12`,recolte1:`${Y}-07-18`,recolte2:addDays(12),graines:addDays(20)}),
+    c('c8','p2',Y,'b3',3,17,{semis:`${Y}-03-10`,rempotage:`${Y}-04-07`,plantation:`${Y}-05-02`,recolte1:`${Y}-07-10`,recolte2:addDays(5),graines:addDays(14)}),
+    c('c9','p7',Y,'b4',12,3.2,{semis:`${Y}-08-10`,plantation:`${Y}-09-01`,recolte1:addDays(8),recolte2:addDays(28)}),
+    c('c10','p8',Y,'b4',25,0,{semis:`${Y}-03-15`,plantation:`${Y}-07-10`,recolte1:addDays(18)})
+  ];
+  const entries = [
+    {id:'e1',plantId:'p2',date:`${Y}-07-12`,text:'Première tomate mûre, 480 g. Très bon goût. Quelques fruits fendus après l\u2019orage.',photo:null},
+    {id:'e2',plantId:'p1',date:`${Y}-06-02`,text:'Gourmands retirés et palissage fait. Début de floraison sur le 2e étage.',photo:null},
+    {id:'e3',plantId:'p4',date:`${Y}-07-03`,text:'Oïdium léger sur les feuilles basses : traitement au lait dilué (1/10).',photo:null}
+  ];
+  const s = { plants, cultures, beds, entries, photos:[], tombstones:{} };
+  COLLECTIONS.forEach(k => s[k].forEach(x => { x.updatedAt = SEED_TS; }));
+  return s;
+}
+
+/* =====================================================================
+   Rotation logic
+===================================================================== */
+function rotConflicts(bedId, year, family, excludeId){
+  if (!bedId || !family || family==='Autre') return [];
+  return state.cultures.filter(c => c.bedId===bedId && c.id!==excludeId && famOfPlant(c.plantId)===family
+    && Math.abs(c.year-year)>=1 && Math.abs(c.year-year)<=ROTATION_YEARS);
+}
+function bedAvoid(bedId, year){
+  const set = new Set();
+  state.cultures.filter(c => c.bedId===bedId && year-c.year>=1 && year-c.year<=ROTATION_YEARS)
+    .forEach(c => { const f = famOfPlant(c.plantId); if (f && f!=='Autre') set.add(f); });
+  return [...set];
+}
+
+/* =====================================================================
+   Theme, toast, modal, backup bar
+===================================================================== */
+let theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', theme);
+  const b = $('#theme-toggle');
+  b.innerHTML = ico(theme==='dark' ? 'sun' : 'moon', 20);
+  b.setAttribute('aria-label', `Passer en mode ${theme==='dark' ? 'clair' : 'sombre'}`);
+  refreshIcons();
+}
+let toastTimer;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3200); }
+const modal = $('#modal');
+function openModal(html){ modal.innerHTML = html; refreshIcons(); if (!modal.open) modal.showModal(); const f = modal.querySelector('input:not([type=file]),select,textarea'); if (f) f.focus(); }
+function closeModal(){ if (modal.open) modal.close(); }
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+$('#lightbox').addEventListener('click', e => { if (e.target.id === 'lightbox') e.currentTarget.close(); });
+let pendingConfirm = null;
+function confirmBox(msg, onOk){
+  pendingConfirm = onOk;
+  openModal(`<h2 id="modal-title">Confirmer</h2><p>${esc(msg)}</p>
+    <div class="modal-actions"><button class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-danger" data-act="confirm-ok">${ico('trash-2',18)} Confirmer</button></div>`);
+}
+function updateBackupBar(){
+  const bar = $('#backup-bar'); if (!bar) return;
+  const m = state.meta;
+  bar.classList.toggle('dirty', !!m.dirty);
+  const last = m.lastExportAt ? `Dernière sauvegarde : ${fmtDT(m.lastExportAt)}.` : 'Aucune sauvegarde faite sur cet appareil.';
+  const msg = m.dirty
+    ? `${ico('triangle-alert',20)}<span><strong>Modifications non sauvegardées.</strong> ${last}</span>`
+    : `${ico('circle-check',20)}<span>Aucune modification en attente. ${last}</span>`;
+  bar.innerHTML = `<div class="backup-status">${msg}</div><button class="btn btn-primary" data-act="open-backup">${ico('save',18)} Sauvegarder / Restaurer via fichier JSON</button>`;
+  refreshIcons();
+}
+
+/* =====================================================================
+   Views
+===================================================================== */
+const sortedPlants = () => [...state.plants].sort((a,b) => a.species.localeCompare(b.species,'fr') || a.variety.localeCompare(b.variety,'fr'));
+const coverOf = p => p.photo || ([...state.entries].filter(e => e.plantId===p.id && e.photo).sort((a,b) => b.date.localeCompare(a.date))[0] || {}).photo || null;
+const thumbHtml = p => { const s = photoSrc(coverOf(p)); return s ? `<img class="thumb" src="${s}" alt="Photo de ${esc(label(p))}" width="52" height="52" loading="lazy">` : `<span class="thumb">${ico('leaf',24)}</span>`; };
+
+function vHome(){
+  const Y = new Date().getFullYear(), t = today(), lim = addDays(30);
+  const cur = state.cultures.filter(c => c.year===Y);
+  const kg = cur.reduce((s,c) => s + (+c.harvestKg||0), 0);
+  const species = new Set(state.plants.map(p => norm(p.species))).size;
+  const up = [];
+  state.cultures.forEach(c => STEPS.forEach(s => { const d = c.dates && c.dates[s.key]; if (d && d>=t && d<=lim) up.push({d,s,c}); }));
+  up.sort((a,b) => a.d.localeCompare(b.d));
+  const recent = [...state.entries].sort((a,b) => b.date.localeCompare(a.date)).slice(0,4);
+  return `
+  <div class="main-inner">
+    <div class="page-header"><div><h1 class="page-title">Mon potager</h1><p class="page-sub">Saison ${Y} · vue d\u2019ensemble</p></div></div>
+    <dl class="stats">
+      <div class="stat"><dt>Fiches</dt><dd>${state.plants.length}</dd></div>
+      <div class="stat"><dt>Espèces</dt><dd>${species}</dd></div>
+      <div class="stat"><dt>Cultures ${Y}</dt><dd>${cur.length}</dd></div>
+      <div class="stat"><dt>Récolte ${Y}</dt><dd>${kg.toLocaleString('fr-FR',{maximumFractionDigits:1})} kg</dd></div>
+    </dl>
+    <div class="grid-2">
+      <section class="card" aria-labelledby="h-up">
+        <h2 id="h-up" style="font-size:var(--text-lg);margin-bottom:var(--space-3)">À venir · 30 jours</h2>
+        ${up.length ? `<ul class="list">${up.map(u => `<li><a class="row" href="#/plant/${u.c.plantId}">${ico(u.s.icon,20)}<span class="grow"><strong>${esc(u.s.label)} · ${esc(label(byId(state.plants,u.c.plantId)))}</strong><span class="muted">${fmtDate(u.d)}${u.c.bedId ? ' · '+esc((byId(state.beds,u.c.bedId)||{}).name||'') : ''}</span></span>${ico('chevron-right',18)}</a></li>`).join('')}</ul>`
+        : `<div class="empty"><h3>Rien de prévu</h3><p>Aucune étape datée dans les 30 prochains jours. Ajoutez des dates dans vos cultures pour les voir ici.</p></div>`}
+      </section>
+      <section class="card" aria-labelledby="h-ch">
+        <h2 id="h-ch" style="font-size:var(--text-lg);margin-bottom:var(--space-3)">Récoltes par année (kg)</h2>
+        <div class="canvas-wrap"><canvas id="chart-harvest" role="img" aria-label="Histogramme des récoltes annuelles en kilogrammes"></canvas></div>
+      </section>
+    </div>
+    <h2 class="section-title">Dernières notes</h2>
+    ${recent.length ? `<ul class="list">${recent.map(e => { const p = byId(state.plants,e.plantId); return `<li><a class="row" href="#/plant/${e.plantId}">${p?thumbHtml(p):''}<span class="grow"><strong>${esc(label(p))}</strong><span class="muted">${fmtDate(e.date)} · ${esc((e.text||'Photo').slice(0,90))}</span></span></a></li>`; }).join('')}</ul>`
+      : `<div class="empty"><h3>Aucune note</h3><p>Ouvrez une fiche pour ajouter une observation ou une photo.</p></div>`}
+  </div>`;
+}
+
+function lexList(q){
+  const n = norm(q);
+  if (!state.plants.length) return `<div class="empty"><h3>Votre lexique est vide</h3><p>Créez votre première fiche, par exemple une tomate « Red Zebra », ou restaurez une sauvegarde.</p><button class="btn btn-primary" data-act="new-plant">${ico('plus',18)} Nouvelle fiche</button></div>`;
+  const items = sortedPlants().filter(p => !n || norm(`${p.species} ${p.variety} ${p.family}`).includes(n));
+  if (!items.length) return `<div class="empty"><h3>Aucun résultat</h3><p>Aucune fiche ne correspond à « ${esc(q)} ».</p></div>`;
+  const groups = new Map();
+  items.forEach(p => { const k = norm(p.species); if (!groups.has(k)) groups.set(k,{name:p.species,family:p.family,list:[]}); groups.get(k).list.push(p); });
+  const letters = [...new Set([...groups.values()].map(g => (norm(g.name)[0]||'#').toUpperCase()))];
+  const first = L => slug([...groups.values()].find(g => (norm(g.name)[0]||'#').toUpperCase()===L).name);
+  return `<div class="letters" role="group" aria-label="Index alphabétique">${letters.map(L => `<button data-act="jump" data-id="sp-${first(L)}" aria-label="Aller à la lettre ${L}">${L}</button>`).join('')}</div>` +
+    [...groups.values()].map(g => `<section class="species" id="sp-${slug(g.name)}" aria-label="${esc(g.name)}">
+      <h2>${esc(g.name)} <span class="count">${g.list.length} variété${g.list.length>1?'s':''}</span>${g.family?`<span class="badge">${esc(g.family)}</span>`:''}</h2>
+      <ul class="var-list">${g.list.map(p => { const cs = state.cultures.filter(c => c.plantId===p.id); const last = cs.length ? Math.max(...cs.map(c => c.year)) : null;
+        return `<li><a class="row" href="#/plant/${p.id}">${thumbHtml(p)}<span class="grow"><strong>${esc(p.variety)}</strong><span class="muted">${cs.length} culture${cs.length>1?'s':''}${last?' · dernière : '+last:''}</span></span>${ico('chevron-right',18)}</a></li>`; }).join('')}</ul>
+    </section>`).join('');
+}
+function vLex(){
+  return `<div class="main-inner">
+    <div class="page-header"><div><h1 class="page-title">Lexique</h1><p class="page-sub">Toutes vos fiches, classées par espèce puis par variété.</p></div>
+      <button class="btn btn-primary" data-act="new-plant">${ico('plus',18)} Nouvelle fiche</button></div>
+    <div class="field"><label for="lex-q">Rechercher une espèce, une variété ou une famille</label>
+      <input class="input" id="lex-q" type="search" autocomplete="off" placeholder="Ex. tomate, zebra, Solanacées"></div>
+    <div id="lex-list">${lexList('')}</div></div>`;
+}
+
+function cultureCard(c){
+  const bed = byId(state.beds,c.bedId), t = today(), fam = famOfPlant(c.plantId);
+  const conf = rotConflicts(c.bedId,c.year,fam,c.id);
+  return `<article class="card" style="margin-bottom:var(--space-4)" aria-label="Culture ${c.year}">
+    <div class="culture-head">
+      <div><h3 style="font-size:var(--text-lg)">Saison ${c.year}</h3>
+        <p class="muted" style="font-size:var(--text-sm)">${bed ? esc(bed.name) : 'Emplacement non défini'}${c.qty!==''&&c.qty!=null?` · ${c.qty} plant${c.qty>1?'s':''}`:''}${c.harvestKg?` · ${c.harvestKg} kg récoltés`:''}</p></div>
+      <div style="display:flex;gap:var(--space-2)">
+        <button class="btn btn-secondary btn-icon" data-act="edit-culture" data-id="${c.id}" aria-label="Modifier la culture ${c.year}">${ico('pencil',18)}</button>
+        <button class="btn btn-ghost btn-icon" data-act="del-culture" data-id="${c.id}" aria-label="Supprimer la culture ${c.year}">${ico('trash-2',18)}</button></div>
+    </div>
+    ${conf.length ? `<div class="alert" style="margin-top:var(--space-3);margin-bottom:0" role="alert">${ico('triangle-alert',18)}<span>Rotation : des ${esc(fam)} ont déjà été cultivées ici en ${[...new Set(conf.map(x => x.year))].join(', ')}.</span></div>` : ''}
+    <ul class="steps">${STEPS.map(s => { const d = c.dates && c.dates[s.key];
+      return `<li>${ico(s.icon,20)}<span class="label-s">${s.label}</span>${d ? `<span>${fmtDate(d)}</span><span class="badge ${d>t?'':'badge-ok'}">${d>t?'Prévu':'Fait'}</span>` : `<span class="none">—</span>`}</li>`; }).join('')}</ul>
+    ${c.note ? `<p class="muted" style="margin-top:var(--space-3)">${esc(c.note)}</p>` : ''}
+  </article>`;
+}
+
+function vPlant(r){
+  const p = byId(state.plants, r.id);
+  if (!p) return `<div class="empty"><h3>Fiche introuvable</h3><p>Elle a peut-être été supprimée.</p><a class="btn btn-primary" href="#/lexique">Retour au lexique</a></div>`;
+  const list = sortedPlants(), i = list.findIndex(x => x.id===p.id);
+  const prev = list[i-1], next = list[i+1];
+  const sibs = list.filter(x => norm(x.species)===norm(p.species) && x.id!==p.id);
+  const cults = state.cultures.filter(c => c.plantId===p.id).sort((a,b) => b.year-a.year);
+  const entries = state.entries.filter(e => e.plantId===p.id).sort((a,b) => b.date.localeCompare(a.date));
+  const photoIds = [p.photo, ...entries.map(e => e.photo)].filter(id => id && photoSrc(id));
+  const mainSrc = photoSrc(p.photo, true);
+  pend.entry = null;
+  return `<div class="main-inner">
+    <nav class="crumbs" aria-label="Fil d\u2019Ariane"><a href="#/lexique">Lexique</a>${ico('chevron-right',14)}<a href="#/lexique" data-act="search-species" data-q="${esc(p.species)}">${esc(p.species)}</a>${ico('chevron-right',14)}<span aria-current="page">${esc(p.variety)}</span></nav>
+    <div class="plant-head">
+      <div><h1 class="page-title">${esc(p.species)} · ${esc(p.variety)}</h1>
+        <div class="facts">${p.family?`<span class="badge">${esc(p.family)}</span>`:''}${p.sun?`<span class="badge">${ico('sun',14)} ${esc(p.sun)}</span>`:''}</div></div>
+      <div style="display:flex;gap:var(--space-2)">
+        <button class="btn btn-secondary" data-act="edit-plant" data-id="${p.id}">${ico('pencil',18)} Modifier</button>
+        <button class="btn btn-ghost btn-icon" data-act="del-plant" data-id="${p.id}" aria-label="Supprimer la fiche">${ico('trash-2',18)}</button></div>
+    </div>
+    <div class="card" style="margin-top:var(--space-4)">
+      ${mainSrc ? `<img class="plant-photo" src="${mainSrc}" alt="Photo de ${esc(label(p))}" width="240" height="240">` : ''}
+      <p>${p.notes ? esc(p.notes) : '<span class="muted">Aucune description. Utilisez « Modifier » pour ajouter vos conseils de culture.</span>'}</p>
+      <div style="clear:both"></div>
+    </div>
+    ${sibs.length ? `<h2 class="section-title">Autres variétés · ${esc(p.species)}</h2><div class="gallery">${sibs.map(s => `<a class="chip" href="#/plant/${s.id}">${esc(s.variety)}</a>`).join('')}</div>` : ''}
+    <h2 class="section-title">Cultures et étapes <button class="btn btn-primary" data-act="add-culture" data-plant="${p.id}">${ico('plus',18)} Ajouter une saison</button></h2>
+    ${cults.length ? cults.map(cultureCard).join('') : `<div class="empty"><h3>Aucune culture enregistrée</h3><p>Ajoutez une saison pour suivre semis, plantation, récoltes et graines, et l\u2019affecter à un emplacement.</p></div>`}
+    <h2 class="section-title">Photos</h2>
+    ${photoIds.length ? `<div class="gallery">${photoIds.map(id => `<button data-act="view-photo" data-ref="${id}" aria-label="Agrandir la photo"><img src="${photoSrc(id)}" alt="Photo de ${esc(label(p))}" width="84" height="84" loading="lazy"></button>`).join('')}</div>` : `<p class="muted">Pas encore de photo. Ajoutez-en une dans le journal ci-dessous.</p>`}
+    <h2 class="section-title">Journal</h2>
+    <form class="card" data-form="entry" data-plant="${p.id}" novalidate>
+      <div class="form-row">
+        <div class="field"><label for="e-date">Date</label><input class="input" id="e-date" name="date" type="date" value="${today()}"></div>
+        <div class="field"><label for="e-photo">Photo (optionnelle)</label><input class="input" id="e-photo" type="file" accept="image/*" data-photo="entry"></div>
+      </div>
+      <div id="prev-entry" style="margin-bottom:var(--space-3)"></div>
+      <div class="field"><label for="e-text">Commentaire</label><textarea class="input" id="e-text" name="text" placeholder="Observation, traitement, goût, problème…"></textarea>
+        <p class="err pwa-hide" id="e-err">${ico('circle-alert',16)} Ajoutez un commentaire ou une photo.</p></div>
+      <button class="btn btn-primary" type="submit">${ico('message-square-plus',18)} Ajouter au journal</button>
+    </form>
+    <div style="margin-top:var(--space-4)">
+    ${entries.length ? entries.map(e => { const s = photoSrc(e.photo); return `<div class="entry"><div class="entry-meta"><span>${fmtDate(e.date)}</span><button class="btn btn-ghost btn-icon" data-act="del-entry" data-id="${e.id}" aria-label="Supprimer cette note">${ico('trash-2',16)}</button></div>
+      ${e.text ? `<p>${esc(e.text)}</p>` : ''}${s ? `<img src="${s}" alt="Photo du ${fmtDate(e.date)}" width="260" height="195" loading="lazy" data-act="view-photo" data-ref="${e.photo}">` : ''}</div>`; }).join('')
+      : `<div class="empty"><h3>Journal vide</h3><p>Notez ici vos observations au fil de la saison.</p></div>`}
+    </div>
+    <div class="pager">
+      ${prev ? `<a class="btn btn-secondary" href="#/plant/${prev.id}">${ico('chevron-left',18)} ${esc(label(prev))}</a>` : '<span></span>'}
+      ${next ? `<a class="btn btn-secondary" href="#/plant/${next.id}">${esc(label(next))} ${ico('chevron-right',18)}</a>` : '<span></span>'}
+    </div>
+  </div>`;
+}
+
+function bedCard(b){
+  const Y = new Date().getFullYear();
+  const cs = state.cultures.filter(c => c.bedId===b.id);
+  const minY = Math.min(Y-2, ...cs.map(c => c.year)), maxY = Y+1;
+  const rows = []; for (let y=maxY; y>=minY; y--) rows.push(y);
+  const avoid = bedAvoid(b.id, Y+1);
+  const ok = FAMILIES.filter(f => f!=='Autre' && !avoid.includes(f)).slice(0,5);
+  const bs = photoSrc(b.photo);
+  return `<article class="card" aria-label="${esc(b.name)}">
+    <div class="culture-head">
+      <div class="bed-title">${bs ? `<button data-act="view-photo" data-ref="${b.photo}" aria-label="Agrandir la photo de ${esc(b.name)}"><img class="thumb" src="${bs}" alt="Photo de ${esc(b.name)}" width="52" height="52" loading="lazy"></button>` : ''}
+        <div><h2 style="font-size:var(--text-lg)">${esc(b.name)}</h2><p class="muted" style="font-size:var(--text-sm)">${esc(b.type)}${b.area?` · ${b.area} m²`:''}</p></div></div>
+      <div style="display:flex;gap:var(--space-2)">
+        <button class="btn btn-secondary btn-icon" data-act="edit-bed" data-id="${b.id}" aria-label="Modifier ${esc(b.name)}">${ico('pencil',18)}</button>
+        <button class="btn btn-ghost btn-icon" data-act="del-bed" data-id="${b.id}" aria-label="Supprimer ${esc(b.name)}">${ico('trash-2',18)}</button></div>
+    </div>
+    ${b.notes ? `<p class="muted" style="margin:var(--space-2) 0 var(--space-3)">${esc(b.notes)}</p>` : ''}
+    <div style="margin-top:var(--space-3)">${rows.map(y => {
+      const cy = cs.filter(c => c.year===y);
+      return `<div class="year-row"><span class="y">${y}</span><div class="cells">${cy.length ? cy.map(c => { const p = byId(state.plants,c.plantId); const f = p&&p.family; const w = rotConflicts(b.id,y,f,c.id).length>0;
+        return `<a class="chip ${w?'warn':''}" style="--h:${hue(f)}" href="#/plant/${c.plantId}">${esc(label(p))}${w?ico('triangle-alert',14):''}</a>`; }).join('') : `<span class="muted" style="font-size:var(--text-sm)">${y>Y?'À planifier':'Libre'}</span>`}</div>
+        <button class="btn btn-ghost btn-icon" data-act="add-culture" data-bed="${b.id}" data-year="${y}" aria-label="Ajouter une culture en ${y} dans ${esc(b.name)}">${ico('plus',18)}</button></div>`; }).join('')}</div>
+    <div class="alert ${avoid.length?'':'ok'}" style="margin:var(--space-4) 0 0">${ico('lightbulb',18)}<span><strong>${Y+1} :</strong> ${avoid.length ? `éviter ${esc(avoid.join(', '))}. ` : 'aucune contrainte. '}Familles possibles : ${esc(ok.join(', '))}.</span></div>
+  </article>`;
+}
+function vGarden(){
+  return `<div class="main-inner">
+    <div class="page-header"><div><h1 class="page-title">Jardin et rotation</h1><p class="page-sub">Historique par emplacement. Règle appliquée : pas de retour de la même famille avant ${ROTATION_YEARS + 1} ans.</p></div>
+      <button class="btn btn-primary" data-act="add-bed">${ico('plus',18)} Nouvel emplacement</button></div>
+    ${state.beds.length ? `<div class="bed-grid">${state.beds.map(bedCard).join('')}</div>` : `<div class="empty"><h3>Aucun emplacement</h3><p>Créez vos carrés, buttes ou serres pour suivre ce qui y pousse année après année.</p><button class="btn btn-primary" data-act="add-bed">${ico('plus',18)} Nouvel emplacement</button></div>`}
+  </div>`;
+}
+function vData(){
+  return `<div class="main-inner">
+    <div class="page-header"><div><h1 class="page-title">Données</h1><p class="page-sub">Un seul fichier d\u2019application, des sauvegardes explicites.</p></div></div>
+    <div class="alert ${DB.ok?'ok':'bad'}" role="status">${ico(DB.ok?'circle-check':'circle-alert',18)}<span>${DB.ok ? 'Stockage local actif (IndexedDB) : les données restent dans le navigateur de cet appareil.' : 'Stockage indisponible : les données seront perdues à la fermeture. Sauvegardez régulièrement.'}</span></div>
+    <div class="grid-2">
+      <section class="card"><h2 style="font-size:var(--text-lg);margin-bottom:var(--space-2)">Sauvegarde et restauration</h2>
+        <p class="muted" style="margin-bottom:var(--space-4)">Exportez un ZIP (données + photos) ou un JSON (données + miniatures). Restaurez par fusion ou remplacement, avec aperçu avant application.</p>
+        <button class="btn btn-primary" data-act="open-backup">${ico('save',18)} Sauvegarder / Restaurer via fichier JSON</button>
+        ${backupAvailable ? `<p class="hint" style="margin-top:var(--space-4)">Une copie de sécurité d\u2019avant la dernière restauration est disponible.</p><button class="btn btn-secondary" style="margin-top:var(--space-2)" data-act="undo-restore">${ico('undo-2',18)} Annuler la dernière restauration</button>` : ''}</section>
+      <section class="card"><h2 style="font-size:var(--text-lg);margin-bottom:var(--space-2)">Réinitialiser</h2>
+        <p class="muted" style="margin-bottom:var(--space-4)">Recharger les données d\u2019exemple ou repartir de zéro. Les suppressions sont propagées aux autres appareils lors d\u2019une fusion.</p>
+        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+          <button class="btn btn-secondary" data-act="reset-sample">${ico('rotate-ccw',18)} Données d\u2019exemple</button>
+          <button class="btn btn-danger" data-act="clear-all">${ico('trash-2',18)} Tout effacer</button></div></section>
+    </div>
+    <section class="card" style="margin-top:var(--space-4)"><h2 style="font-size:var(--text-lg);margin-bottom:var(--space-3)">Utiliser le même fichier sur PC et Android</h2>
+      <ol class="steps-guide">
+        <li>Gardez <strong>potager-nexus.html</strong> dans un dossier OneDrive. Sur PC, ouvrez-le avec Chrome ou Edge depuis le dossier synchronisé.</li>
+        <li>Sur Android, téléchargez le fichier depuis OneDrive (« Rendre disponible hors connexion » ou « Télécharger »), puis ouvrez-le avec Chrome. Chrome n\u2019y lit que le dossier Téléchargements.</li>
+        <li>Chaque appareil garde ses données dans son propre navigateur : elles voyagent uniquement par les fichiers de sauvegarde.</li>
+        <li>Avant de travailler : restaurez la dernière sauvegarde (Fusionner). Après : sauvegardez, puis déposez le fichier dans OneDrive.</li>
+      </ol></section>
+  </div>`;
+}
+
+/* =====================================================================
+   Event wiring: photos, inputs
+===================================================================== */
+const pend = { plant:null, entry:null, bed:null };
+let pendingLexQ = '', pendingImport = null;
+document.addEventListener('change', async e => {
+  const t = e.target;
+  if (t.matches('input[type=file][data-photo]')) {
+    const kind = t.dataset.photo, prev = document.getElementById('prev-'+kind);
+    try {
+      pend[kind] = await processPhoto(t.files[0]);
+      if (prev) prev.innerHTML = `<img src="${pend[kind].thumb}" alt="Aperçu de la photo" width="120" height="120" style="width:120px;height:120px;object-fit:cover;border-radius:8px">`;
+    } catch(err){ if (prev) { prev.innerHTML = `<p class="err">${ico('circle-alert',16)} ${esc(err.message)}</p>`; refreshIcons(); } }
+  }
+  if (t.id === 'f-species') { const fam = $('#f-family'); if (fam && !fam.dataset.touched) fam.value = famGuess(t.value) || fam.value; }
+  if (t.closest('form[data-form=culture]') && ['c-plant','c-bed','c-year'].includes(t.id)) updateRotWarn();
+  if (t.id === 'dev-name') { state.meta.deviceName = t.value.trim() || guessDevice(); persist(false); }
+  if (t.id === 'restore-file') { const f = t.files[0]; t.value = ''; handleRestoreFile(f); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'f-family') e.target.dataset.touched = '1';
+  if (e.target.id === 'lex-q') { $('#lex-list').innerHTML = lexList(e.target.value); refreshIcons(); }
+  if (e.target.id === 'dev-name') { const n = $('#bk-name'); if (n) { state.meta.deviceName = e.target.value.trim() || guessDevice(); n.textContent = exportName('zip'); } }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('label[for][tabindex]')) { const i = document.getElementById(e.target.getAttribute('for')); if (i) i.click(); }
+});
+
+/* =====================================================================
+   Forms
+===================================================================== */
+const opt = (v, sel) => `<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(v)}</option>`;
+function plantForm(p={}){
+  pend.plant = null;
+  const species = [...new Set(state.plants.map(x => x.species))];
+  const cur = photoSrc(p.photo);
+  return `<form data-form="plant" data-id="${p.id||''}" novalidate>
+    <h2 id="modal-title">${p.id ? 'Modifier la fiche' : 'Nouvelle fiche'}</h2>
+    <div class="form-row">
+      <div class="field"><label for="f-species">Espèce *</label><input class="input" id="f-species" name="species" list="dl-species" value="${esc(p.species)}" autocomplete="off" placeholder="Tomate"><p class="err pwa-hide" data-err="species">${ico('circle-alert',16)} Indiquez l\u2019espèce.</p></div>
+      <div class="field"><label for="f-variety">Variété *</label><input class="input" id="f-variety" name="variety" value="${esc(p.variety)}" autocomplete="off" placeholder="Noire de Crimée"><p class="err pwa-hide" data-err="variety">${ico('circle-alert',16)} Indiquez la variété.</p></div>
+    </div>
+    <datalist id="dl-species">${species.map(s => `<option value="${esc(s)}">`).join('')}</datalist>
+    <div class="form-row">
+      <div class="field"><label for="f-family">Famille botanique</label><input class="input" id="f-family" name="family" list="dl-family" value="${esc(p.family)}" ${p.family?'data-touched="1"':''}><datalist id="dl-family">${FAMILIES.map(f => `<option value="${f}">`).join('')}</datalist><span class="hint">Sert au calcul de la rotation.</span></div>
+      <div class="field"><label for="f-sun">Exposition</label><select class="input" id="f-sun" name="sun">${SUN.map(s => opt(s,p.sun||'Plein soleil')).join('')}</select></div>
+    </div>
+    <div class="field"><label for="f-notes">Description et conseils</label><textarea class="input" id="f-notes" name="notes">${esc(p.notes)}</textarea></div>
+    <div class="field"><label for="f-photo">Photo principale</label><input class="input" id="f-photo" type="file" accept="image/*" data-photo="plant">
+      <div id="prev-plant">${cur?`<img src="${cur}" alt="Photo actuelle" width="120" height="120" style="width:120px;height:120px;object-fit:cover;border-radius:8px">`:''}</div></div>
+    <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div>
+  </form>`;
+}
+function cultureForm(c={}){
+  const d = c.dates || {};
+  return `<form data-form="culture" data-id="${c.id||''}" novalidate>
+    <h2 id="modal-title">${c.id ? 'Modifier la culture' : 'Nouvelle culture'}</h2>
+    <div class="field"><label for="c-plant">Fiche *</label><select class="input" id="c-plant" name="plantId"><option value="">— Choisir —</option>${sortedPlants().map(p => `<option value="${p.id}" ${p.id===c.plantId?'selected':''}>${esc(label(p))}</option>`).join('')}</select><p class="err pwa-hide" data-err="plantId">${ico('circle-alert',16)} Choisissez une fiche.</p></div>
+    <div class="form-row">
+      <div class="field"><label for="c-year">Année *</label><input class="input" id="c-year" name="year" type="number" min="2000" max="2100" value="${c.year||new Date().getFullYear()}"><p class="err pwa-hide" data-err="year">${ico('circle-alert',16)} Année invalide.</p></div>
+      <div class="field"><label for="c-bed">Emplacement</label><select class="input" id="c-bed" name="bedId"><option value="">— Aucun —</option>${state.beds.map(b => `<option value="${b.id}" ${b.id===c.bedId?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div>
+    </div>
+    <div id="rot-warn" aria-live="polite"></div>
+    <div class="form-row">${STEPS.map(s => `<div class="field"><label for="c-${s.key}">${s.label}</label><input class="input" id="c-${s.key}" name="${s.key}" type="date" value="${esc(d[s.key]||'')}"></div>`).join('')}</div>
+    <div class="form-row">
+      <div class="field"><label for="c-qty">Nombre de plants</label><input class="input" id="c-qty" name="qty" type="number" min="0" value="${c.qty??''}"></div>
+      <div class="field"><label for="c-kg">Récolte totale (kg)</label><input class="input" id="c-kg" name="harvestKg" type="number" min="0" step="0.1" value="${c.harvestKg??''}"></div>
+    </div>
+    <div class="field"><label for="c-note">Note de saison</label><textarea class="input" id="c-note" name="note">${esc(c.note)}</textarea></div>
+    <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div>
+  </form>`;
+}
+function updateRotWarn(){
+  const box = $('#rot-warn'); if (!box) return;
+  const f = $('form[data-form=culture]'); if (!f) return;
+  const plantId = $('#c-plant').value, bedId = $('#c-bed').value, year = +$('#c-year').value;
+  if (!plantId || !bedId || !year) { box.innerHTML = ''; return; }
+  const fam = famOfPlant(plantId);
+  const conf = rotConflicts(bedId, year, fam, f.dataset.id);
+  box.innerHTML = conf.length
+    ? `<div class="alert" role="alert">${ico('triangle-alert',18)}<span>Rotation : des ${esc(fam)} ont été cultivées ici en ${[...new Set(conf.map(x => x.year))].join(', ')} (${esc(conf.map(x => label(byId(state.plants,x.plantId))).join(', '))}). Délai conseillé : ${ROTATION_YEARS + 1} ans.</span></div>`
+    : `<div class="alert ok">${ico('circle-check',18)}<span>Rotation respectée pour cet emplacement.</span></div>`;
+  refreshIcons();
+}
+function bedForm(b={}){
+  pend.bed = null;
+  const cur = photoSrc(b.photo);
+  return `<form data-form="bed" data-id="${b.id||''}" novalidate>
+    <h2 id="modal-title">${b.id ? 'Modifier l\u2019emplacement' : 'Nouvel emplacement'}</h2>
+    <div class="field"><label for="b-name">Nom *</label><input class="input" id="b-name" name="name" value="${esc(b.name)}" placeholder="Parcelle nord"><p class="err pwa-hide" data-err="name">${ico('circle-alert',16)} Indiquez un nom.</p></div>
+    <div class="form-row">
+      <div class="field"><label for="b-type">Type</label><select class="input" id="b-type" name="type">${BED_TYPES.map(t => opt(t,b.type||'Carré')).join('')}</select></div>
+      <div class="field"><label for="b-area">Surface (m²)</label><input class="input" id="b-area" name="area" type="number" min="0" step="0.5" value="${b.area??''}"></div>
+    </div>
+    <div class="field"><label for="b-notes">Notes (sol, exposition, arrosage)</label><textarea class="input" id="b-notes" name="notes">${esc(b.notes)}</textarea></div>
+    <div class="field"><label for="b-photo">Photo de l\u2019emplacement</label><input class="input" id="b-photo" type="file" accept="image/*" data-photo="bed">
+      <div id="prev-bed">${cur?`<img src="${cur}" alt="Photo actuelle" width="120" height="120" style="width:120px;height:120px;object-fit:cover;border-radius:8px">`:''}</div></div>
+    <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div>
+  </form>`;
+}
+const showErr = (form, key, on) => { const e = form.querySelector(`[data-err="${key}"]`); if (e) e.classList.toggle('pwa-hide', !on); };
+
+const handlers = {
+  plant(f){
+    const fd = Object.fromEntries(new FormData(f)); const sp = fd.species.trim(), va = fd.variety.trim();
+    showErr(f,'species',!sp); showErr(f,'variety',!va); if (!sp || !va) return;
+    let p = f.dataset.id ? byId(state.plants, f.dataset.id) : null;
+    const data = { species:sp, variety:va, family:fd.family.trim(), sun:fd.sun, notes:fd.notes.trim() };
+    if (p) Object.assign(p, data); else { p = { id:uid(), ...data, photo:null }; state.plants.push(p); }
+    if (pend.plant) { removePhoto(p.photo); p.photo = addPhoto(pend.plant, 'fiche', sp); pend.plant = null; }
+    touch(p); persist(); closeModal(); toast('Fiche enregistrée'); go('#/plant/'+p.id);
+  },
+  culture(f){
+    const fd = Object.fromEntries(new FormData(f)); const year = parseInt(fd.year,10);
+    const yOk = year>=2000 && year<=2100;
+    showErr(f,'plantId',!fd.plantId); showErr(f,'year',!yOk); if (!fd.plantId || !yOk) return;
+    const dates = {}; STEPS.forEach(s => { if (fd[s.key]) dates[s.key] = fd[s.key]; });
+    const data = { plantId:fd.plantId, year, bedId:fd.bedId||'', dates, qty:fd.qty===''?'':+fd.qty, harvestKg:fd.harvestKg===''?'':+fd.harvestKg, note:fd.note.trim() };
+    if (f.dataset.id) touch(Object.assign(byId(state.cultures,f.dataset.id), data)); else state.cultures.push(touch({ id:uid(), ...data }));
+    persist(); closeModal(); toast('Culture enregistrée'); render();
+  },
+  bed(f){
+    const fd = Object.fromEntries(new FormData(f)); const name = fd.name.trim(); showErr(f,'name',!name); if (!name) return;
+    const data = { name, type:fd.type, area:fd.area===''?'':+fd.area, notes:fd.notes.trim() };
+    let b = f.dataset.id ? byId(state.beds,f.dataset.id) : null;
+    if (b) Object.assign(b, data); else { b = { id:uid(), ...data, photo:null }; state.beds.push(b); }
+    if (pend.bed) { removePhoto(b.photo); b.photo = addPhoto(pend.bed, 'emplacement', name); pend.bed = null; }
+    touch(b); persist(); closeModal(); toast('Emplacement enregistré'); render();
+  },
+  entry(f){
+    const fd = Object.fromEntries(new FormData(f)); const text = fd.text.trim();
+    const bad = !text && !pend.entry; $('#e-err').classList.toggle('pwa-hide', !bad); if (bad) return;
+    const pl = byId(state.plants, f.dataset.plant);
+    const e = touch({ id:uid(), plantId:f.dataset.plant, date:fd.date||today(), text, photo:null });
+    if (pend.entry) { e.photo = addPhoto(pend.entry, 'note', pl ? pl.species : 'photo'); pend.entry = null; }
+    state.entries.push(e); persist(); toast('Note ajoutée'); render();
+  }
+};
+document.addEventListener('submit', e => { const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault(); handlers[f.dataset.form](f); });
+
+/* =====================================================================
+   Backup / restore — JSON + ZIP, explicit, merge-based
+===================================================================== */
+const pad = n => String(n).padStart(2,'0');
+const stamp = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`; };
+const exportName = ext => `potager-nexus-export-${stamp()}-${slug(state.meta.deviceName) || 'appareil'}.${ext}`;
+const canShareFiles = () => { try { return !!(navigator.canShare && navigator.canShare({ files:[new File(['x'],'a.zip',{type:'application/zip'})] })); } catch(e){ return false; } };
+
+function exportPayload(embedThumbs){
+  const counts = {}; COLLECTIONS.forEach(k => counts[k] = state[k].length);
+  return {
+    format:'potager-nexus', version:APP_VERSION,
+    meta:{ exportedAt:nowISO(), deviceId:state.meta.deviceId, deviceName:state.meta.deviceName, photos:embedThumbs ? 'miniatures-incluses' : 'dossier-photos', counts },
+    data:{
+      plants:state.plants, cultures:state.cultures, beds:state.beds, entries:state.entries, tombstones:state.tombstones,
+      photos:state.photos.map(p => ({ id:p.id, file:p.file, ownerType:p.ownerType, updatedAt:p.updatedAt, hasFull:!!p.full, ...(embedThumbs ? { thumb:p.thumb } : {}) }))
+    }
+  };
+}
+async function buildExport(kind){
+  if (kind === 'json') {
+    return { blob:new Blob([JSON.stringify(exportPayload(true), null, 1)], { type:'application/json' }), name:exportName('json') };
+  }
+  if (!window.JSZip) throw new Error('Bibliothèque ZIP non chargée : connectez-vous une fois à Internet puis rechargez la page.');
+  const zip = new JSZip();
+  zip.file('donnees.json', JSON.stringify(exportPayload(false), null, 1));
+  const folder = zip.folder('photos');
+  state.photos.forEach(p => {
+    if (p.thumb) folder.file(`${p.file}-thumb.jpg`, p.thumb.split(',')[1], { base64:true });
+    if (p.full) folder.file(`${p.file}.jpg`, p.full.split(',')[1], { base64:true });
+  });
+  const raw = await zip.generateAsync({ type:'blob', compression:'DEFLATE', compressionOptions:{ level:6 } });
+  return { blob:new Blob([raw], { type:'application/zip' }), name:exportName('zip') };
+}
+async function saveBlob(blob, name){
+  const ext = name.split('.').pop();
+  if (window.showSaveFilePicker) {
+    try {
+      const h = await showSaveFilePicker({ suggestedName:name, types:[{ description:ext==='zip' ? 'Archive ZIP' : 'Fichier JSON', accept: ext==='zip' ? { 'application/zip':['.zip'] } : { 'application/json':['.json'] } }] });
+      const w = await h.createWritable(); await w.write(blob); await w.close(); return 'saved';
+    } catch(e){ if (e && e.name === 'AbortError') return 'cancel'; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  return 'saved';
+}
+async function doExport(kind, share=false){
+  document.querySelectorAll('#modal [data-act^=bk-]').forEach(b => b.disabled = true);
+  try {
+    const { blob, name } = await buildExport(kind);
+    let r = 'saved';
+    if (share) {
+      const file = new File([blob], name, { type:blob.type });
+      if (!(navigator.canShare && navigator.canShare({ files:[file] }))) throw new Error('Le partage de fichiers n\u2019est pas disponible ici.');
+      await navigator.share({ files:[file], title:'Sauvegarde Potager Nexus' });
+    } else r = await saveBlob(blob, name);
+    if (r === 'saved') { state.meta.lastExportAt = nowISO(); state.meta.dirty = false; persist(false); toast(`Sauvegarde créée : ${name}`); }
+  } catch(e){ if (!(e && e.name === 'AbortError')) toast(e.message || 'Échec de la sauvegarde'); }
+  if (modal.open) openBackup();
+}
+
+async function readBackupFile(file){
+  const isZip = /\.zip$/i.test(file.name) || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
+  let j, zip = null;
+  if (isZip) {
+    if (!window.JSZip) throw new Error('Bibliothèque ZIP non chargée : connectez-vous une fois à Internet puis rechargez la page.');
+    zip = await JSZip.loadAsync(file);
+    const f = zip.file('donnees.json') || zip.file(/(^|\/)donnees\.json$/)[0];
+    if (!f) throw new Error('« donnees.json » est introuvable dans ce ZIP.');
+    j = JSON.parse(await f.async('string'));
+  } else j = JSON.parse(await file.text());
+  const d = j.data || j;
+  if (!d || !Array.isArray(d.plants) || !Array.isArray(d.cultures)) throw new Error('Ce fichier n\u2019est pas une sauvegarde Potager Nexus.');
+  const meta = j.meta || { exportedAt:j.exportedAt };
+  const remote = { plants:d.plants, cultures:d.cultures, beds:d.beds||[], entries:d.entries||[], photos:[], tombstones:d.tombstones||{} };
+  for (const rp of (d.photos||[])) {
+    if (!rp || !rp.id) continue;
+    const ph = { id:rp.id, file:rp.file, ownerType:rp.ownerType, updatedAt:rp.updatedAt, thumb:rp.thumb||null, full:null };
+    if (zip && rp.file) {
+      const tf = zip.file(`photos/${rp.file}-thumb.jpg`); if (tf) ph.thumb = 'data:image/jpeg;base64,' + await tf.async('base64');
+      const ff = zip.file(`photos/${rp.file}.jpg`); if (ff && rp.hasFull !== false) ph.full = 'data:image/jpeg;base64,' + await ff.async('base64');
+    }
+    remote.photos.push(ph);
+  }
+  await normalizeState(remote, meta.exportedAt || nowISO());
+  return { remote, meta, kind:isZip ? 'zip' : 'json' };
+}
+async function handleRestoreFile(file){
+  if (!file) return;
+  toast('Analyse du fichier…');
+  try {
+    const parsed = await readBackupFile(file);
+    const { merged, stats } = mergeStates(state, parsed.remote);
+    pendingImport = { ...parsed, merged, stats, fileName:file.name };
+    openModal(importPreviewHtml());
+  } catch(err){
+    openModal(`<h2 id="modal-title">Fichier non utilisable</h2><div class="alert bad" role="alert">${ico('circle-alert',18)}<span>${esc(err.message || 'Lecture impossible.')}</span></div>
+      <div class="modal-actions"><button class="btn btn-secondary" data-act="open-backup">Retour</button></div>`);
+  }
+}
+const LBL = { plants:'Fiches', cultures:'Cultures', beds:'Emplacements', entries:'Notes', photos:'Photos' };
+function importPreviewHtml(){
+  const pi = pendingImport, st = pi.stats, m = state.meta, rm = pi.meta || {};
+  const older = rm.exportedAt && m.lastExportAt && rm.exportedAt < m.lastExportAt;
+  const rows = COLLECTIONS.map(k => `<tr><td>${LBL[k]}</td><td>${st[k].added}</td><td>${st[k].updated}</td><td>${st[k].removed}</td><td>${st[k].same}</td></tr>`).join('');
+  return `<h2 id="modal-title">Restaurer : aperçu</h2>
+    <p class="muted">Fichier « ${esc(pi.fileName)} » · ${pi.kind==='zip' ? 'ZIP avec photos complètes' : 'JSON avec miniatures'}${rm.exportedAt ? ` · créé le ${fmtDT(rm.exportedAt)}` : ''}${rm.deviceName ? ` sur « ${esc(rm.deviceName)} »` : ''}.</p>
+    ${older ? `<div class="alert" style="margin-top:var(--space-3)" role="alert">${ico('triangle-alert',18)}<span>Ce fichier est plus ancien que votre dernière sauvegarde (${fmtDT(m.lastExportAt)}). Vérifiez que c\u2019est le bon.</span></div>` : ''}
+    ${m.dirty ? `<div class="alert" style="margin-top:var(--space-3)" role="alert">${ico('triangle-alert',18)}<span>Vous avez des modifications non sauvegardées. « Fusionner » les conserve ; « Remplacer » les écrase.</span></div>` : ''}
+    <table class="diff"><caption class="sr-only">Résultat prévu de la fusion</caption>
+      <thead><tr><th scope="col">Élément</th><th scope="col">Ajoutés</th><th scope="col">Mis à jour</th><th scope="col">Supprimés</th><th scope="col">Inchangés</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="hint">Fusion : pour chaque élément, la version la plus récente gagne ; les suppressions sont reprises. Rien n\u2019est modifié avant votre choix, et une copie de sécurité est gardée.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" data-act="open-backup">Annuler</button>
+      <button class="btn btn-danger" data-act="apply-replace">${ico('replace',18)} Remplacer tout</button>
+      <button class="btn btn-primary" data-act="apply-merge">${ico('git-merge',18)} Fusionner</button>
+    </div>`;
+}
+async function applyImport(mode){
+  const pi = pendingImport; if (!pi) return;
+  backupAvailable = await DB.set('backup', { savedAt:nowISO(), state });
+  const meta = { ...state.meta, lastImportAt:nowISO() };
+  if (mode === 'merge') {
+    state = { ...pi.merged, meta:{ ...meta, dirty:true } };
+  } else {
+    const r = pi.remote;
+    r.photos.forEach(rp => { if (!rp.full) { const lp = photoOf(rp.id); if (lp && lp.full) rp.full = lp.full; } });
+    state = { plants:r.plants, cultures:r.cultures, beds:r.beds, entries:r.entries, photos:r.photos, tombstones:r.tombstones, meta:{ ...meta, dirty:false } };
+  }
+  pendingImport = null; persist(false); closeModal();
+  toast(mode === 'merge' ? 'Fusion appliquée. Pensez à sauvegarder le résultat.' : 'Sauvegarde restaurée.');
+  render();
+}
+function openBackup(){
+  const m = state.meta;
+  const noFull = state.photos.filter(p => !p.full).length;
+  const last = m.lastExportAt ? `Dernière sauvegarde : ${fmtDT(m.lastExportAt)}.` : 'Aucune sauvegarde faite sur cet appareil.';
+  openModal(`<h2 id="modal-title">Sauvegarder / Restaurer</h2>
+    <div class="alert ${m.dirty ? '' : 'ok'}" role="status">${ico(m.dirty ? 'triangle-alert' : 'circle-check', 18)}<span>${m.dirty ? 'Modifications non sauvegardées. ' : 'Aucune modification en attente. '}${last}${m.lastImportAt ? ` Dernière restauration : ${fmtDT(m.lastImportAt)}.` : ''}</span></div>
+    <div class="field"><label for="dev-name">Nom de cet appareil</label><input class="input" id="dev-name" value="${esc(m.deviceName)}" autocomplete="off"><span class="hint">Ajouté au nom du fichier (PC, Android…) pour que deux appareils ne s\u2019écrasent jamais dans OneDrive.</span></div>
+    <h3>1. Sauvegarder</h3>
+    <p class="hint" style="margin-bottom:var(--space-3)">Nom du fichier : <span id="bk-name">${esc(exportName('zip'))}</span><br>${state.photos.length} photo${state.photos.length>1?'s':''}${noFull ? `, dont ${noFull} en miniature seulement sur cet appareil` : ''}.</p>
+    <div class="btn-stack">
+      <button class="btn btn-primary" data-act="bk-zip">${ico('archive',18)} ZIP complet : données + photos</button>
+      <button class="btn btn-secondary" data-act="bk-json">${ico('file-json',18)} JSON seul : données + miniatures</button>
+      ${canShareFiles() ? `<button class="btn btn-secondary" data-act="bk-share">${ico('share-2',18)} Partager le ZIP (OneDrive, Drive…)</button>` : ''}
+    </div>
+    <h3>2. Restaurer</h3>
+    <label class="btn btn-secondary" for="restore-file" tabindex="0" style="width:100%">${ico('upload',18)} Choisir un fichier .zip ou .json</label>
+    <input id="restore-file" type="file" accept=".zip,.json,application/zip,application/json" class="sr-only">
+    <p class="hint" style="margin-top:var(--space-2)">Un aperçu s\u2019affiche avant toute modification.</p>
+    <div class="modal-actions"><button class="btn btn-secondary" data-act="close">Fermer</button></div>`);
+}
+
+/* =====================================================================
+   Actions
+===================================================================== */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('#btn-install').classList.remove('pwa-hide'); });
+function go(h){ if (location.hash === h) render(); else location.hash = h; }
+
+const actions = {
+  'close': () => closeModal(),
+  'close-lightbox': () => $('#lightbox').close(),
+  'confirm-ok': () => { const fn = pendingConfirm; pendingConfirm = null; closeModal(); if (fn) fn(); },
+  'open-backup': () => openBackup(),
+  'bk-zip': () => doExport('zip'),
+  'bk-json': () => doExport('json'),
+  'bk-share': () => doExport('zip', true),
+  'apply-merge': () => applyImport('merge'),
+  'apply-replace': () => confirmBox('Remplacer toutes les données de cet appareil par celles du fichier ? Une copie de sécurité reste disponible dans « Données ».', () => applyImport('replace')),
+  'undo-restore': () => confirmBox('Revenir à l\u2019état d\u2019avant la dernière restauration ?', async () => {
+    const b = await DB.get('backup'); if (!b) return toast('Aucune copie de sécurité');
+    state = await normalizeState(b.state); if (!state.meta) state.meta = makeMeta(); state.meta.dirty = true;
+    persist(false); toast('État précédent rétabli'); render(); }),
+  'new-plant': () => openModal(plantForm()),
+  'edit-plant': el => openModal(plantForm(byId(state.plants, el.dataset.id))),
+  'del-plant': el => { const p = byId(state.plants, el.dataset.id);
+    confirmBox(`Supprimer « ${label(p)} », ses cultures et son journal ?`, () => {
+      removeItems('cultures', c => c.plantId===p.id); removeItems('entries', e => e.plantId===p.id); removeItems('plants', x => x.id===p.id);
+      persist(); toast('Fiche supprimée'); go('#/lexique'); }); },
+  'add-culture': el => { openModal(cultureForm({ plantId:el.dataset.plant||'', bedId:el.dataset.bed||'', year:el.dataset.year ? +el.dataset.year : undefined })); updateRotWarn(); },
+  'edit-culture': el => { openModal(cultureForm(byId(state.cultures, el.dataset.id))); updateRotWarn(); },
+  'del-culture': el => confirmBox('Supprimer cette saison de culture ?', () => { removeItems('cultures', c => c.id===el.dataset.id); persist(); toast('Culture supprimée'); render(); }),
+  'add-bed': () => openModal(bedForm()),
+  'edit-bed': el => openModal(bedForm(byId(state.beds, el.dataset.id))),
+  'del-bed': el => { const b = byId(state.beds, el.dataset.id);
+    confirmBox(`Supprimer l\u2019emplacement « ${b.name} » ? Les cultures liées seront conservées sans emplacement.`, () => {
+      state.cultures.forEach(c => { if (c.bedId===b.id) { c.bedId = ''; touch(c); } });
+      removeItems('beds', x => x.id===b.id); persist(); toast('Emplacement supprimé'); render(); }); },
+  'del-entry': el => confirmBox('Supprimer cette note ?', () => { removeItems('entries', x => x.id===el.dataset.id); persist(); toast('Note supprimée'); render(); }),
+  'view-photo': el => { const ph = photoOf(el.dataset.ref); if (!ph) return;
+    $('#lightbox-img').src = ph.full || ph.thumb;
+    $('#lightbox-note').textContent = ph.full ? '' : 'Miniature seulement sur cet appareil. Restaurez le ZIP complet pour retrouver la photo en pleine résolution.';
+    $('#lightbox').showModal(); },
+  'jump': el => { const t = document.getElementById(el.dataset.id); if (t) t.scrollIntoView({ behavior:'smooth', block:'start' }); },
+  'search-species': el => { pendingLexQ = el.dataset.q; },
+  'install': async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $('#btn-install').classList.add('pwa-hide'); },
+  'reset-sample': () => confirmBox('Remplacer toutes vos données par les données d\u2019exemple ?', () => {
+    COLLECTIONS.forEach(k => state[k].forEach(x => tomb(x.id)));
+    const s = seed(); const ts = nowISO();
+    COLLECTIONS.forEach(k => s[k].forEach(x => { x.updatedAt = ts; delete state.tombstones[x.id]; }));
+    state = { ...s, tombstones:state.tombstones, meta:state.meta };
+    persist(); toast('Données d\u2019exemple chargées'); render(); }),
+  'clear-all': () => confirmBox('Effacer toutes vos données ? Pensez à sauvegarder avant.', () => {
+    COLLECTIONS.forEach(k => { state[k].forEach(x => tomb(x.id)); state[k] = []; });
+    persist(); toast('Données effacées'); render(); })
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const fn = actions[el.dataset.act]; if (fn) fn(el, e);
+});
+$('#theme-toggle').addEventListener('click', () => { theme = theme==='dark' ? 'light' : 'dark'; applyTheme(); if (parseRoute().name==='home') drawChart(); });
+
+/* =====================================================================
+   Router & chart
+===================================================================== */
+function parseRoute(){ const h = location.hash.replace(/^#\/?/,'') || 'home'; const [name,id] = h.split('/'); return { name, id }; }
+let lastRoute = '', chart = null;
+function drawChart(){
+  const cv = $('#chart-harvest'); if (!cv) return;
+  if (chart) { chart.destroy(); chart = null; }
+  const wrap = cv.parentElement;
+  const by = {}; state.cultures.forEach(c => { if (+c.harvestKg) by[c.year] = (by[c.year]||0) + (+c.harvestKg); });
+  const years = Object.keys(by).sort();
+  if (!window.Chart) { wrap.innerHTML = '<p class="muted">Graphique indisponible (bibliothèque non chargée).</p>'; return; }
+  if (!years.length) { wrap.innerHTML = '<div class="empty"><h3>Pas encore de récolte</h3><p>Renseignez les kilos récoltés dans vos cultures.</p></div>'; return; }
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  chart = new Chart(cv, { type:'bar',
+    data:{ labels:years, datasets:[{ label:'Récolte (kg)', data:years.map(y => Math.round(by[y]*10)/10), backgroundColor:g('--color-primary'), borderRadius:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
+      scales:{ x:{ ticks:{ color:g('--color-text-muted') }, grid:{ display:false } }, y:{ beginAtZero:true, ticks:{ color:g('--color-text-muted') }, grid:{ color:g('--color-divider') } } } } });
+}
+function render(){
+  const r = parseRoute();
+  document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav === (r.name==='plant' ? 'lexique' : r.name)) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vGarden, data:vData };
+  const main = $('#view');
+  try { main.innerHTML = (views[r.name] || vHome)(r); }
+  catch(err){ main.innerHTML = `<div class="alert bad" role="alert">${ico('circle-alert',18)}<span>Erreur d\u2019affichage : ${esc(err.message)}. Sauvegardez vos données puis rechargez la page.</span></div>`; }
+  updateBackupBar();
+  refreshIcons();
+  if (r.name==='home') drawChart();
+  if (r.name==='lexique' && pendingLexQ) { const i = $('#lex-q'); if (i) { i.value = pendingLexQ; $('#lex-list').innerHTML = lexList(pendingLexQ); refreshIcons(); } pendingLexQ = ''; }
+  const key = r.name + '/' + (r.id||''); if (key !== lastRoute) { window.scrollTo(0,0); lastRoute = key; }
+}
+window.addEventListener('hashchange', render);
+
+/* =====================================================================
+   Init
+===================================================================== */
+async function init(){
+  applyTheme();
+  await DB.open();
+  const saved = await DB.get('state');
+  const bk = await DB.get('backup'); backupAvailable = !!bk;
+  if (saved && Array.isArray(saved.plants)) {
+    state = await normalizeState(saved);
+    state.meta = { ...makeMeta(), ...(saved.meta||{}) };
+  } else {
+    state = await normalizeState(seed(), SEED_TS); state.meta = makeMeta(); persist(false);
+  }
+  render();
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
