@@ -202,6 +202,32 @@ table.diff thead th{font-weight:700;color:var(--color-text-muted)}
 .lot-sub{font-size:var(--text-sm);color:var(--color-text-muted)}
 .lot-tools{display:flex;gap:var(--space-2)}
 .life-table td,.life-table th{padding:6px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--color-divider);font-size:var(--text-sm)}
+
+.btn-icon:disabled{cursor:not-allowed;opacity:.4}
+.plan-bar{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;margin-bottom:var(--space-4)}
+.plan-year{display:flex;align-items:center;gap:var(--space-2);font-weight:700;font-size:var(--text-lg)}
+.plan-scroll{overflow-x:auto;padding-bottom:var(--space-2);margin-bottom:var(--space-4)}
+.plan-grid{display:grid;grid-template-columns:34px repeat(var(--cols),minmax(76px,1fr));gap:4px;min-width:max-content}
+.plan-h{display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:700;color:var(--color-text-muted);min-height:30px;border-radius:var(--radius-sm)}
+button.plan-h:hover{background:var(--color-primary-highlight)}
+.pcell{--zc:var(--color-border);position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:88px;padding:6px 8px;text-align:left;border-radius:var(--radius-md);border:1px solid var(--color-divider);border-top:6px solid var(--zc);background:color-mix(in oklab,var(--zc) 16%,var(--color-surface));color:var(--color-text)}
+.pcell:hover{background:color-mix(in oklab,var(--zc) 28%,var(--color-surface))}
+.pcell.sel{outline:3px solid var(--color-primary);outline-offset:-3px}
+.pcell.warn{box-shadow:inset 0 0 0 2px var(--color-warning)}
+.pc-code{font-size:var(--text-xs);font-weight:700;color:var(--color-text-muted)}
+.pc-name{font-size:var(--text-xs);font-weight:700;line-height:1.15}
+.pc-crops{font-size:var(--text-xs);line-height:1.25;overflow-wrap:anywhere}
+.pc-warn{position:absolute;top:4px;right:4px;color:var(--color-warning)}
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-4);font-size:var(--text-sm)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:16px;height:16px;border-radius:4px;border:1px solid var(--color-border);background:var(--zc,var(--color-border))}
+.plan-sel{margin-bottom:var(--space-4);border-color:var(--color-primary)}
+.sel-row{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:flex-end;margin-top:var(--space-3)}
+.sel-row .field{margin:0;flex:1 1 220px}
+.sug-list{list-style:none;display:grid;gap:var(--space-2);margin-top:var(--space-2)}
+.sug-list li{max-width:none;font-size:var(--text-sm)}
+.hist-list{list-style:none;display:grid;gap:var(--space-2)}
+.hist-list li{max-width:none;display:flex;gap:var(--space-3);align-items:center;justify-content:space-between;flex-wrap:wrap;padding:var(--space-2) var(--space-3);border:1px solid var(--color-divider);border-radius:var(--radius-md)}
 </style>
 </head>
 <body>
@@ -214,6 +240,9 @@ table.diff thead th{font-weight:700;color:var(--color-text-muted)}
   <div class="header-actions">
     <button class="btn btn-ghost pwa-hide" id="btn-install" data-act="install"><i data-lucide="download" width="18" height="18" aria-hidden="true"></i><span class="btn-label">Installer</span></button>
     <button class="btn btn-primary" data-act="new-plant"><i data-lucide="plus" width="18" height="18" aria-hidden="true"></i><span class="btn-label">Nouvelle fiche</span></button>
+    <button class="btn btn-ghost btn-icon" id="btn-undo" data-act="undo" disabled aria-label="Rien à annuler" title="Rien à annuler"><i data-lucide="undo-2" width="20" height="20" aria-hidden="true"></i></button>
+    <button class="btn btn-ghost btn-icon" id="btn-redo" data-act="redo" disabled aria-label="Rien à rétablir" title="Rien à rétablir"><i data-lucide="redo-2" width="20" height="20" aria-hidden="true"></i></button>
+    <button class="btn btn-ghost btn-icon" id="btn-history" data-act="open-history" aria-label="Historique des modifications" title="Historique des modifications"><i data-lucide="history" width="20" height="20" aria-hidden="true"></i></button>
     <button class="btn btn-ghost btn-icon" id="theme-toggle" aria-label="Basculer le thème"></button>
   </div>
 </header>
@@ -225,6 +254,7 @@ table.diff thead th{font-weight:700;color:var(--color-text-muted)}
   <a href="#/lexique" data-nav="lexique"><i data-lucide="book-open" width="24" height="24" aria-hidden="true"></i>Lexique</a>
   <a href="#/graines" data-nav="graines"><i data-lucide="wheat" width="24" height="24" aria-hidden="true"></i>Graines</a>
   <a href="#/jardin" data-nav="jardin"><i data-lucide="map" width="24" height="24" aria-hidden="true"></i>Jardin</a>
+  <a href="#/plan" data-nav="plan"><i data-lucide="layout-grid" width="24" height="24" aria-hidden="true"></i>Plan</a>
   <a href="#/data" data-nav="data"><i data-lucide="database" width="24" height="24" aria-hidden="true"></i>Données</a>
 </nav>
 
@@ -249,7 +279,7 @@ table.diff thead th{font-weight:700;color:var(--color-text-muted)}
 ===================================================================== */
 const APP_VERSION = 3;
 const SEED_TS = '2026-01-01T00:00:00.000Z';
-const COLLECTIONS = ['plants','cultures','beds','entries','photos','seeds'];
+const COLLECTIONS = ['plants','cultures','beds','entries','photos','seeds','gardens','zones','cells'];
 const STEPS = [
   { key:'semis',      label:'Semis',                 icon:'sprout' },
   { key:'rempotage',  label:'Rempotage',             icon:'flower-2' },
@@ -315,7 +345,7 @@ const DB = {
       try { const t = this.db.transaction('kv','readwrite'); t.objectStore('kv').put(v,k);
         t.oncomplete = () => res(true); t.onerror = () => res(false); t.onabort = () => res(false); } catch(e){ res(false); } }); }
 };
-let state = { plants:[], cultures:[], beds:[], entries:[], photos:[], seeds:[], tombstones:{}, meta:makeMeta() };
+let state = { plants:[], cultures:[], beds:[], entries:[], photos:[], seeds:[], gardens:[], zones:[], cells:[], tombstones:{}, meta:makeMeta() };
 let saveTimer, backupAvailable = false;
 function persist(markDirty=true){
   if (markDirty) state.meta.dirty = true;
@@ -442,7 +472,12 @@ function seed(){
     {id:'s4',plantId:'p6',species:'Carotte',variety:'Nantaise 2',vintage:Y-3,origin:'achat',supplier:'Sachet acheté (exemple)',cultureId:'',qty:1,unit:'sachet(s)',location:'Boîte à graines',lifeYears:'',germDate:'',germPct:'',notes:'',empty:false},
     {id:'s5',plantId:'p7',species:'Laitue',variety:'Batavia Reine des Glaces',vintage:Y-4,origin:'achat',supplier:'',cultureId:'',qty:'',unit:'graines',location:'',lifeYears:'',germDate:'',germPct:'',notes:'',empty:false}
   ];
-  const s = { plants, cultures, beds, entries, photos:[], seeds, tombstones:{} };
+  const zones = [ {id:'z1',name:'Planche tomates',color:'#b45309',note:''}, {id:'z2',name:'Légumes racines',color:'#437a22',note:''} ];
+  const zy = {}; zy[Y] = 'z1'; const zy2 = {}; zy2[Y] = 'z2';
+  const cells = [ {id:'q-0-0',col:0,row:0,name:'Tomates sud',zones:zy,note:''}, {id:'q-1-0',col:1,row:0,name:'',zones:zy,note:''}, {id:'q-0-1',col:0,row:1,name:'',zones:zy2,note:''} ];
+  cultures.find(x => x.id==='c6').cellIds = ['q-0-1'];
+  cultures.find(x => x.id==='c7').cellIds = ['q-0-0','q-1-0'];
+  const s = { plants, cultures, beds, entries, photos:[], seeds, gardens:[], zones, cells, tombstones:{} };
   COLLECTIONS.forEach(k => s[k].forEach(x => { x.updatedAt = SEED_TS; }));
   return s;
 }
@@ -572,7 +607,7 @@ function cultureCard(c){
   return `<article class="card" style="margin-bottom:var(--space-4)" aria-label="Culture ${c.year}">
     <div class="culture-head">
       <div><h3 style="font-size:var(--text-lg)">Saison ${c.year}</h3>
-        <p class="muted" style="font-size:var(--text-sm)">${bed ? esc(bed.name) : 'Emplacement non défini'}${c.qty!==''&&c.qty!=null?` · ${c.qty} plant${c.qty>1?'s':''}`:''}${c.harvestKg?` · ${c.harvestKg} kg récoltés`:''}</p></div>
+        <p class="muted" style="font-size:var(--text-sm)">${bed ? esc(bed.name) : (c.cellIds && c.cellIds.length ? '' : 'Emplacement non défini')}${c.cellIds && c.cellIds.length ? (bed ? ' · ' : '') + esc(cellsTxt(c)) : ''}${c.qty!==''&&c.qty!=null?` · ${c.qty} plant${c.qty>1?'s':''}`:''}${c.harvestKg?` · ${c.harvestKg} kg récoltés`:''}</p></div>
       <div style="display:flex;gap:var(--space-2)">
         <button class="btn btn-secondary btn-icon" data-act="edit-culture" data-id="${c.id}" aria-label="Modifier la culture ${c.year}">${ico('pencil',18)}</button>
         <button class="btn btn-ghost btn-icon" data-act="del-culture" data-id="${c.id}" aria-label="Supprimer la culture ${c.year}">${ico('trash-2',18)}</button></div>
@@ -849,7 +884,7 @@ function exportPayload(embedThumbs){
     format:'potager-nexus', version:APP_VERSION,
     meta:{ exportedAt:nowISO(), deviceId:state.meta.deviceId, deviceName:state.meta.deviceName, photos:embedThumbs ? 'miniatures-incluses' : 'dossier-photos', counts },
     data:{
-      plants:state.plants, cultures:state.cultures, beds:state.beds, entries:state.entries, seeds:state.seeds, tombstones:state.tombstones,
+      plants:state.plants, cultures:state.cultures, beds:state.beds, entries:state.entries, seeds:state.seeds, gardens:state.gardens, zones:state.zones, cells:state.cells, tombstones:state.tombstones,
       photos:state.photos.map(p => ({ id:p.id, file:p.file, ownerType:p.ownerType, updatedAt:p.updatedAt, hasFull:!!p.full, ...(embedThumbs ? { thumb:p.thumb } : {}) }))
     }
   };
@@ -909,7 +944,7 @@ async function readBackupFile(file){
   const d = j.data || j;
   if (!d || !Array.isArray(d.plants) || !Array.isArray(d.cultures)) throw new Error('Ce fichier n\u2019est pas une sauvegarde Potager Nexus.');
   const meta = j.meta || { exportedAt:j.exportedAt };
-  const remote = { plants:d.plants, cultures:d.cultures, beds:d.beds||[], entries:d.entries||[], seeds:d.seeds||[], photos:[], tombstones:d.tombstones||{} };
+  const remote = { plants:d.plants, cultures:d.cultures, beds:d.beds||[], entries:d.entries||[], seeds:d.seeds||[], gardens:d.gardens||[], zones:d.zones||[], cells:d.cells||[], photos:[], tombstones:d.tombstones||{} };
   for (const rp of (d.photos||[])) {
     if (!rp || !rp.id) continue;
     const ph = { id:rp.id, file:rp.file, ownerType:rp.ownerType, updatedAt:rp.updatedAt, thumb:rp.thumb||null, full:null };
@@ -935,7 +970,7 @@ async function handleRestoreFile(file){
       <div class="modal-actions"><button class="btn btn-secondary" data-act="open-backup">Retour</button></div>`);
   }
 }
-const LBL = { plants:'Fiches', cultures:'Cultures', beds:'Emplacements', entries:'Notes', seeds:'Lots de graines', photos:'Photos' };
+const LBL = { plants:'Fiches', cultures:'Cultures', beds:'Emplacements', entries:'Notes', seeds:'Lots de graines', gardens:'Plan (dimensions)', zones:'Zones', cells:'Carrés', photos:'Photos' };
 function importPreviewHtml(){
   const pi = pendingImport, st = pi.stats, m = state.meta, rm = pi.meta || {};
   const older = rm.exportedAt && m.lastExportAt && rm.exportedAt < m.lastExportAt;
@@ -962,7 +997,7 @@ async function applyImport(mode){
   } else {
     const r = pi.remote;
     r.photos.forEach(rp => { if (!rp.full) { const lp = photoOf(rp.id); if (lp && lp.full) rp.full = lp.full; } });
-    state = { plants:r.plants, cultures:r.cultures, beds:r.beds, entries:r.entries, seeds:r.seeds||[], photos:r.photos, tombstones:r.tombstones, meta:{ ...meta, dirty:false } };
+    state = { plants:r.plants, cultures:r.cultures, beds:r.beds, entries:r.entries, seeds:r.seeds||[], gardens:r.gardens||[], zones:r.zones||[], cells:r.cells||[], photos:r.photos, tombstones:r.tombstones, meta:{ ...meta, dirty:false } };
   }
   pendingImport = null; persist(false); closeModal();
   toast(mode === 'merge' ? 'Fusion appliquée. Pensez à sauvegarder le résultat.' : 'Sauvegarde restaurée.');
@@ -1051,7 +1086,7 @@ $('#theme-toggle').addEventListener('click', () => { theme = theme==='dark' ? 'l
 
 
 /* =====================================================================
-   Stock de graines (livraison 1)
+   Stock de graines
 ===================================================================== */
 const SEED_LIFE_SRC = 'https://www.pomologie.fr/duree-germinative-des-graines-potageres-les-points-a-connaitre/';
 const SEED_LIFE_VEG = {
@@ -1076,13 +1111,13 @@ const SEED_LIFE_FLOWER = {
   7:['Amarante','Bégonia'],
   8:['Bourrache','Réséda']
 };
-const SEED_ALIAS = { potiron:'courge', potimarron:'courge', butternut:'courge', citrouille:'courge', giraumon:'courge', salade:'laitue', batavia:'laitue', romaine:'laitue', endive:'chicoree', mais:'mais', oignons:'oignon', 'haricot vert':'haricot' };
+const SEED_ALIAS = { potiron:'courge', potimarron:'courge', butternut:'courge', citrouille:'courge', giraumon:'courge', salade:'laitue', batavia:'laitue', romaine:'laitue', endive:'chicoree' };
 const nrm2 = s => norm(s).replace(/œ/g,'oe');
 const SEED_INDEX = (() => {
   const out = [];
   const add = (obj, kind) => Object.entries(obj).forEach(([y,names]) => names.forEach(name => out.push({ key:nrm2(name), name, years:+y, kind })));
   add(SEED_LIFE_VEG,'potager'); add(SEED_LIFE_FLOWER,'fleur');
-  Object.entries(SEED_ALIAS).forEach(([a,t]) => { const ref = out.find(o => o.key===t); if (ref && a!==t) out.push({ key:a, name:ref.name, years:ref.years, kind:ref.kind, alias:true }); });
+  Object.entries(SEED_ALIAS).forEach(([a,t]) => { const ref = out.find(o => o.key===t); if (ref) out.push({ key:a, name:ref.name, years:ref.years, kind:ref.kind, alias:true }); });
   out.forEach(o => { o.re = new RegExp('(^|[^a-z])' + o.key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '[sx]?($|[^a-z])'); });
   return out.sort((a,b) => b.key.length - a.key.length);
 })();
@@ -1129,7 +1164,6 @@ function seedHomeAlert(){
   const parts = [bad ? `${plural(bad,'lot')} périmé${bad>1?'s':''}` : '', warn ? `${plural(warn,'lot')} en dernière saison` : ''].filter(Boolean).join(' · ');
   return `<div class="alert" role="status">${ico('wheat',18)}<span><strong>Graines :</strong> ${parts}. <a href="#/graines">Voir le stock</a></span></div>`;
 }
-
 let seedUI = { q:'', lvl:'all', out:false };
 function lotRow(sd){
   const st = seedStatus(sd), L = LVL[st.lvl];
@@ -1167,7 +1201,6 @@ function seedListHtml(){
   const arr = [...groups.values()].sort((a,b) => (a[0].species+a[0].variety).localeCompare(b[0].species+b[0].variety,'fr'));
   return arr.map(g => {
     g.sort((a,b) => (+b.vintage) - (+a.vintage));
-    const worst = g.filter(x => !x.empty).map(x => seedStatus(x).lvl).sort((a,b) => LVL_RANK[a]-LVL_RANK[b])[0];
     const total = g.filter(x => !x.empty).length;
     return `<section class="card" style="margin-bottom:var(--space-4)" aria-label="${esc(g[0].species+' '+g[0].variety)}">
       <div class="culture-head"><h2 style="font-size:var(--text-lg)">${esc(g[0].species)} · ${esc(g[0].variety)}</h2>
@@ -1305,6 +1338,395 @@ document.addEventListener('change', e => {
 });
 
 /* =====================================================================
+   Annuler / Rétablir (historique de la session)
+===================================================================== */
+const HIST_MAX = 60;
+let undoStack = [], redoStack = [], lastSnap = null, lastKey = '', histLock = false, histPending = null;
+function takeSnap(){
+  const o = {};
+  COLLECTIONS.forEach(k => { o[k] = k === 'photos' ? state.photos.slice() : JSON.parse(JSON.stringify(state[k] || [])); });
+  o.tombstones = { ...state.tombstones };
+  return o;
+}
+const snapKey = sn => JSON.stringify(COLLECTIONS.map(k => k === 'photos' ? sn.photos.map(p => p.id + '|' + p.updatedAt) : sn[k])) + JSON.stringify(sn.tombstones);
+function histReset(){ undoStack = []; redoStack = []; lastSnap = takeSnap(); lastKey = snapKey(lastSnap); updateUndoUI(); }
+const _persist = persist;
+persist = function(markDirty = true){
+  _persist(markDirty);
+  if (!lastSnap) { lastSnap = takeSnap(); lastKey = snapKey(lastSnap); updateUndoUI(); return; }
+  const cur = takeSnap(), key = snapKey(cur);
+  if (key !== lastKey) {
+    if (!histLock) {
+      const entry = { snap:lastSnap, label:'', t:nowISO() };
+      undoStack.push(entry); if (undoStack.length > HIST_MAX) undoStack.shift();
+      redoStack = []; histPending = entry;
+      setTimeout(() => { if (histPending === entry) { if (!entry.label) entry.label = 'Modification'; histPending = null; } }, 0);
+    }
+    lastSnap = cur; lastKey = key;
+  }
+  updateUndoUI();
+};
+const _toast = toast;
+toast = function(msg){ if (histPending && !histPending.label) { histPending.label = msg; histPending = null; } _toast(msg); };
+function restoreSnap(sn){
+  const now = nowISO(), tombs = { ...sn.tombstones }, ns = { tombstones:tombs, meta:state.meta };
+  COLLECTIONS.forEach(k => {
+    const keep = new Set(sn[k].map(x => x.id));
+    (state[k] || []).forEach(x => { if (!keep.has(x.id)) tombs[x.id] = now; });
+    ns[k] = k === 'photos' ? sn.photos.slice() : JSON.parse(JSON.stringify(sn[k]));
+  });
+  state = ns; histLock = true; try { persist(true); } finally { histLock = false; }
+  render();
+}
+function undoOnce(){ const e = undoStack.pop(); if (!e) return null; redoStack.push({ snap:lastSnap, label:e.label, t:e.t }); restoreSnap(e.snap); return e; }
+function redoOnce(){ const e = redoStack.pop(); if (!e) return null; undoStack.push({ snap:lastSnap, label:e.label, t:e.t }); restoreSnap(e.snap); return e; }
+function doUndo(n = 1){ let last = null, c = 0; while (c < n && undoStack.length) { last = undoOnce(); c++; } if (c) toast(c > 1 ? `${c} modifications annulées` : `Annulé : ${last.label || 'modification'}`); }
+function doRedo(){ const e = redoOnce(); if (e) toast(`Rétabli : ${e.label || 'modification'}`); }
+function updateUndoUI(){
+  const u = $('#btn-undo'), r = $('#btn-redo'); if (!u || !r) return;
+  u.disabled = !undoStack.length; r.disabled = !redoStack.length;
+  const ul = undoStack.length ? undoStack[undoStack.length-1].label : '', rl = redoStack.length ? redoStack[redoStack.length-1].label : '';
+  u.title = u.ariaLabel = undoStack.length ? `Annuler : ${ul || 'dernière modification'} (Ctrl+Z) · ${undoStack.length} disponible${undoStack.length>1?'s':''}` : 'Rien à annuler';
+  r.title = r.ariaLabel = redoStack.length ? `Rétablir : ${rl || 'modification'} (Ctrl+Y)` : 'Rien à rétablir';
+  u.setAttribute('aria-label', u.title); r.setAttribute('aria-label', r.title);
+}
+function historyHtml(){
+  const items = [...undoStack].reverse();
+  return `<h2 id="modal-title">Historique des modifications</h2>
+    <p class="muted">Modifications de cette session, de la plus récente à la plus ancienne. L’historique est vidé quand vous fermez l’application : pensez à sauvegarder.</p>
+    ${items.length ? `<ol class="hist-list" style="margin-top:var(--space-3)">${items.map((e,i) => `<li><span><strong>${esc(e.label || 'Modification')}</strong><br><span class="muted" style="font-size:var(--text-sm)">${fmtDT(e.t)}</span></span><button class="btn btn-secondary" data-act="undo-n" data-n="${i+1}">${ico('undo-2',16)} Annuler ${i ? 'ces ' + (i+1) : 'celle-ci'}</button></li>`).join('')}</ol>` : `<div class="empty"><h3>Aucune modification à annuler</h3></div>`}
+    <div class="modal-actions"><button class="btn btn-secondary" data-act="close">Fermer</button></div>`;
+}
+document.addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+  const k = e.key.toLowerCase(); if (k !== 'z' && k !== 'y') return;
+  const t = e.target;
+  if (t && t.matches && t.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]),textarea,select,[contenteditable="true"]')) return;
+  if (modal.open || $('#lightbox').open) return;
+  e.preventDefault();
+  if (k === 'z' && !e.shiftKey) doUndo(); else doRedo();
+});
+Object.assign(actions, {
+  'undo': () => doUndo(),
+  'redo': () => doRedo(),
+  'open-history': () => openModal(historyHtml()),
+  'undo-n': el => { closeModal(); doUndo(+el.dataset.n); }
+});
+
+/* =====================================================================
+   Plan du jardin : grille de carrés, zones, historique, suggestions
+===================================================================== */
+const ZONE_COLORS = ['#437a22','#01696f','#b45309','#7a3a96','#a12c7b','#2f6fba','#8a6d00','#c2410c'];
+const SUGGEST_NEXT = {
+  'Solanacées':['Fabacées','Alliacées','Apiacées'], 'Cucurbitacées':['Fabacées','Apiacées','Alliacées'],
+  'Brassicacées':['Fabacées','Alliacées','Apiacées'], 'Fabacées':['Brassicacées','Solanacées','Cucurbitacées','Astéracées'],
+  'Apiacées':['Fabacées','Solanacées','Cucurbitacées'], 'Alliacées':['Solanacées','Cucurbitacées','Brassicacées'],
+  'Astéracées':['Fabacées','Apiacées','Solanacées'], 'Amaranthacées':['Fabacées','Solanacées','Alliacées'],
+  'Poacées':['Fabacées','Brassicacées'], 'Rosacées':['Alliacées','Fabacées'], 'Lamiacées':['Solanacées','Fabacées']
+};
+const COMPANION = {
+  'tomate':{ bon:['basilic','carotte','oignon','ail','persil','laitue'], mauvais:['fenouil','chou','pomme de terre'] },
+  'carotte':{ bon:['poireau','oignon','ail','radis','laitue','tomate'], mauvais:['aneth'] },
+  'haricot':{ bon:['carotte','concombre','courgette','mais','laitue'], mauvais:['oignon','ail','poireau','fenouil'] },
+  'poireau':{ bon:['carotte','celeri','fraisier'], mauvais:['haricot','pois'] },
+  'oignon':{ bon:['carotte','tomate','betterave','fraisier'], mauvais:['haricot','pois'] },
+  'ail':{ bon:['carotte','tomate','betterave','fraisier'], mauvais:['haricot','pois'] },
+  'pois':{ bon:['carotte','radis','laitue'], mauvais:['oignon','ail','poireau'] },
+  'chou':{ bon:['celeri','oignon'], mauvais:['tomate','fraisier'] },
+  'courgette':{ bon:['haricot','mais','capucine'], mauvais:['pomme de terre'] },
+  'concombre':{ bon:['haricot','laitue','mais'], mauvais:['pomme de terre'] },
+  'fenouil':{ bon:[], mauvais:['tomate','haricot','carotte','chou'] },
+  'laitue':{ bon:['carotte','radis','fraisier','concombre'], mauvais:[] },
+  'basilic':{ bon:['tomate'], mauvais:[] }
+};
+const compKeys = Object.keys(COMPANION);
+const compKeyOf = sp => { const n = nrm2(sp); return compKeys.concat(['pomme de terre','celeri','radis','mais','fraisier','betterave','capucine','aneth'])
+  .sort((a,b) => b.length - a.length).find(k => new RegExp('(^|[^a-z])' + k + '[sx]?($|[^a-z])').test(n)) || ''; };
+
+const colLetter = n => { let s = ''; n++; while (n > 0) { const m = (n-1) % 26; s = String.fromCharCode(65+m) + s; n = Math.floor((n-1)/26); } return s; };
+const cellCode = (c,r) => colLetter(c) + (r+1);
+const cellKey = (c,r) => `q-${c}-${r}`;
+const parseCell = id => { const m = /^q-(\d+)-(\d+)$/.exec(id); return m ? { col:+m[1], row:+m[2] } : null; };
+const codeOf = id => { const p = parseCell(id); return p ? cellCode(p.col,p.row) : id; };
+function gardenCfg(){
+  const g = byId(state.gardens,'jardin') || {};
+  const w = +g.widthM > 0 ? +g.widthM : 20, l = +g.lengthM > 0 ? +g.lengthM : 14, c = +g.cellM > 0 ? +g.cellM : 2;
+  return { widthM:w, lengthM:l, cellM:c, cols:Math.max(1, Math.floor(w/c + 1e-9)), rows:Math.max(1, Math.floor(l/c + 1e-9)), saved:!!g.id };
+}
+const cellDoc = id => byId(state.cells, id);
+function ensureCell(id){
+  let c = cellDoc(id);
+  if (!c) { const p = parseCell(id); c = { id, col:p.col, row:p.row, name:'', zones:{}, note:'' }; state.cells.push(c); touch(c); }
+  if (!c.zones) c.zones = {};
+  return c;
+}
+function cultureIndex(){
+  const m = new Map();
+  state.cultures.forEach(c => (c.cellIds || []).forEach(id => { if (!m.has(id)) m.set(id, []); m.get(id).push(c); }));
+  return m;
+}
+const cellCrops = (idx, id, Y) => (idx.get(id) || []).filter(c => c.year === Y);
+function cellConflicts(idx, id, cu){
+  const fam = famOfPlant(cu.plantId); if (!fam || fam === 'Autre') return [];
+  return (idx.get(id) || []).filter(o => o.id !== cu.id && famOfPlant(o.plantId) === fam && Math.abs(o.year - cu.year) >= 1 && Math.abs(o.year - cu.year) <= ROTATION_YEARS);
+}
+function cellAvoid(idx, id, Y){
+  const m = new Map();
+  (idx.get(id) || []).forEach(o => { const d = Y - o.year, f = famOfPlant(o.plantId);
+    if (f && f !== 'Autre' && d >= 1 && d <= ROTATION_YEARS) { if (!m.has(f)) m.set(f, []); m.get(f).push(o.year); } });
+  return m;
+}
+function cellSuggest(idx, id, Y){
+  const avoid = cellAvoid(idx, id, Y);
+  const prev = (idx.get(id) || []).filter(o => o.year === Y-1).map(o => famOfPlant(o.plantId)).filter(Boolean);
+  let prefer = []; prev.forEach(f => (SUGGEST_NEXT[f] || []).forEach(x => prefer.push(x)));
+  const all = FAMILIES.filter(f => f !== 'Autre');
+  if (!prefer.length) prefer = all.slice();
+  prefer = [...new Set(prefer)].filter(f => !avoid.has(f));
+  return { avoid, prev, prefer, others:all.filter(f => !avoid.has(f) && !prefer.includes(f)) };
+}
+const seedFamily = sd => { const p = byId(state.plants, sd.plantId); return (p && p.family) || famGuess(sd.species) || ''; };
+function neighborsOf(id, cfg){
+  const p = parseCell(id); if (!p) return [];
+  return [[1,0],[-1,0],[0,1],[0,-1]].map(([dc,dr]) => ({ col:p.col+dc, row:p.row+dr }))
+    .filter(q => q.col >= 0 && q.row >= 0 && q.col < cfg.cols && q.row < cfg.rows).map(q => cellKey(q.col,q.row));
+}
+function neighborIssues(idx, id, Y, cfg){
+  const mine = cellCrops(idx, id, Y).map(c => ({ c, k:compKeyOf((byId(state.plants,c.plantId)||{}).species) })).filter(x => x.k);
+  const out = [];
+  neighborsOf(id, cfg).forEach(nid => cellCrops(idx, nid, Y).forEach(oc => {
+    const ok = compKeyOf((byId(state.plants,oc.plantId)||{}).species); if (!ok) return;
+    mine.forEach(m => { const rule = COMPANION[m.k] || {}, rev = COMPANION[ok] || {};
+      const pn = label(byId(state.plants,m.c.plantId)), on = label(byId(state.plants,oc.plantId));
+      if ((rule.mauvais || []).includes(ok) || (rev.mauvais || []).includes(m.k)) out.push({ type:'bad', nid, text:`${pn} près de ${on} (${codeOf(nid)}) : association déconseillée.` });
+      else if ((rule.bon || []).includes(ok) || (rev.bon || []).includes(m.k)) out.push({ type:'good', nid, text:`${pn} près de ${on} (${codeOf(nid)}) : bonne association.` });
+    });
+  }));
+  return out;
+}
+const planUI = { year:new Date().getFullYear(), sel:new Set(), mode:false, cell:null };
+const zoneOf = (cell, Y) => { const z = cell && cell.zones && cell.zones[Y]; return z ? byId(state.zones, z) : null; };
+function cropOptions(Y){
+  const cu = state.cultures.filter(c => c.year === Y).sort((a,b) => label(byId(state.plants,a.plantId)).localeCompare(label(byId(state.plants,b.plantId)),'fr'));
+  const pl = [...state.plants].sort((a,b) => label(a).localeCompare(label(b),'fr'));
+  return `<option value="">— Choisir —</option>
+    ${cu.length ? `<optgroup label="Cultures déjà prévues en ${Y}">${cu.map(c => `<option value="c:${c.id}">${esc(label(byId(state.plants,c.plantId)))}${(c.cellIds||[]).length ? ' (' + c.cellIds.length + ' carré' + (c.cellIds.length>1?'s':'') + ')' : ''}</option>`).join('')}</optgroup>` : ''}
+    <optgroup label="Nouvelle culture en ${Y}">${pl.map(p => `<option value="p:${p.id}">${esc(label(p))}</option>`).join('')}</optgroup>`;
+}
+function plantOnCells(val, ids, Y){
+  if (!val) return false;
+  const kind = val.slice(0,1), ref = val.slice(2);
+  if (kind === 'c') { const c = byId(state.cultures, ref); if (!c) return false; c.cellIds = [...new Set([...(c.cellIds || []), ...ids])]; touch(c); }
+  else { if (!byId(state.plants, ref)) return false; state.cultures.push(touch({ id:uid(), plantId:ref, year:Y, bedId:'', cellIds:[...ids], dates:{}, qty:'', harvestKg:'', note:'' })); }
+  return true;
+}
+const cellsTxt = c => (c.cellIds && c.cellIds.length) ? `${c.cellIds.length > 1 ? 'Carrés' : 'Carré'} ${c.cellIds.map(codeOf).join(', ')}` : '';
+
+function vPlan(){
+  const Y = planUI.year, cfg = gardenCfg(), idx = cultureIndex();
+  const total = cfg.cols * cfg.rows;
+  const zonesUsed = new Map(); let free = [], conflictCells = [];
+  const famCount = new Map();
+  let head = `<div class="plan-h"></div>` + Array.from({length:cfg.cols}, (_,c) => `<button class="plan-h" data-act="sel-col" data-col="${c}" aria-label="Sélectionner la colonne ${colLetter(c)}">${colLetter(c)}</button>`).join('');
+  let body = '';
+  for (let r = 0; r < cfg.rows; r++) {
+    body += `<button class="plan-h" data-act="sel-row" data-row="${r}" aria-label="Sélectionner la ligne ${r+1}">${r+1}</button>`;
+    for (let c = 0; c < cfg.cols; c++) {
+      const id = cellKey(c,r), cd = cellDoc(id), z = zoneOf(cd, Y), crops = cellCrops(idx, id, Y);
+      if (z) zonesUsed.set(z.id, (zonesUsed.get(z.id)||0) + 1);
+      if (!crops.length) free.push(id);
+      const conf = crops.some(cu => cellConflicts(idx, id, cu).length), nb = neighborIssues(idx, id, Y, cfg).some(x => x.type === 'bad');
+      if (conf) conflictCells.push(id);
+      crops.forEach(cu => { const f = famOfPlant(cu.plantId) || 'Autre'; if (!famCount.has(f)) famCount.set(f, new Set()); famCount.get(f).add(id); });
+      const names = crops.map(cu => (byId(state.plants,cu.plantId)||{}).species).filter(Boolean);
+      const shown = names.slice(0,2).map(esc).join(', ') + (names.length > 2 ? ` +${names.length-2}` : '');
+      const aria = `Carré ${cellCode(c,r)}${cd && cd.name ? ', ' + cd.name : ''}${z ? ', zone ' + z.name : ''}${names.length ? ', ' + names.join(', ') : ', libre'}${conf ? ', conflit de rotation' : ''}${nb ? ', voisinage déconseillé' : ''}`;
+      body += `<button class="pcell ${planUI.sel.has(id) ? 'sel' : ''} ${conf || nb ? 'warn' : ''}" style="${z ? `--zc:${esc(z.color)}` : ''}" data-act="cell-click" data-col="${c}" data-row="${r}" aria-label="${esc(aria)}" aria-pressed="${planUI.sel.has(id)}">
+        <span class="pc-code">${cellCode(c,r)}</span>${cd && cd.name ? `<span class="pc-name">${esc(cd.name)}</span>` : ''}
+        <span class="pc-crops">${shown || '<span class="muted">—</span>'}</span>${conf || nb ? `<span class="pc-warn">${ico('triangle-alert',16)}</span>` : ''}</button>`;
+    }
+  }
+  const selIds = [...planUI.sel].filter(id => { const p = parseCell(id); return p && p.col < cfg.cols && p.row < cfg.rows; });
+  const selPanel = selIds.length ? `<section class="card plan-sel" aria-label="Carrés sélectionnés">
+      <strong>${plural(selIds.length,'carré')} sélectionné${selIds.length>1?'s':''}</strong> <span class="muted">${esc(selIds.slice(0,12).map(codeOf).join(', '))}${selIds.length>12 ? '…' : ''}</span>
+      <div class="sel-row">
+        <div class="field"><label for="ps-zone">Zone en ${Y}</label><select class="input" id="ps-zone"><option value="">— Choisir —</option><option value="__none">Aucune zone</option>${state.zones.map(z => `<option value="${z.id}">${esc(z.name)}</option>`).join('')}</select></div>
+        <button class="btn btn-primary" data-act="sel-zone">${ico('layers',18)} Affecter la zone</button>
+      </div>
+      <div class="sel-row">
+        <div class="field"><label for="ps-crop">Culture en ${Y}</label><select class="input" id="ps-crop">${cropOptions(Y)}</select></div>
+        <button class="btn btn-primary" data-act="sel-plant">${ico('sprout',18)} Planter sur la sélection</button>
+      </div>
+      <div class="sel-row"><button class="btn btn-secondary" data-act="sel-clear">${ico('x',18)} Tout désélectionner</button></div>
+    </section>` : '';
+  const legend = `<div class="legend" aria-label="Légende des zones">${state.zones.map(z => `<span><i class="sw" style="--zc:${esc(z.color)}"></i>${esc(z.name)} <span class="muted">(${zonesUsed.get(z.id)||0})</span></span>`).join('')}<span><i class="sw"></i>Sans zone</span></div>`;
+  const urgent = seedActive().map(s => ({ s, st:seedStatus(s) })).filter(x => ['mid','warn','bad'].includes(x.st.lvl)).sort((a,b) => LVL_RANK[a.st.lvl]-LVL_RANK[b.st.lvl]).slice(0,6);
+  const seedSug = urgent.map(({s,st}) => { const fam = seedFamily(s);
+    const ok = fam ? free.filter(id => !cellAvoid(idx, id, Y).has(fam)) : [];
+    return `<li><span class="lvl lvl-${st.lvl}">${LVL[st.lvl].short}</span> <strong>${esc(s.species)} ${esc(s.variety)} ${s.vintage}</strong>${fam ? ` (${esc(fam)})` : ''} : ${fam ? (ok.length ? `carrés libres compatibles : ${esc(ok.slice(0,6).map(codeOf).join(', '))}${ok.length>6 ? ` et ${ok.length-6} autres` : ''}.` : 'aucun carré libre compatible avec la rotation.') : 'famille inconnue, liez une fiche pour obtenir une suggestion.'}</li>`; }).join('');
+  const famRows = [...famCount.entries()].sort((a,b) => b[1].size - a[1].size).map(([f,s]) => `<li><strong>${esc(f)}</strong> : ${plural(s.size,'carré')}</li>`).join('');
+  return `<div class="main-inner">
+    <div class="page-header"><div><h1 class="page-title">Plan du jardin</h1>
+      <p class="page-sub">${cfg.widthM} m × ${cfg.lengthM} m · ${cfg.cols} colonnes × ${cfg.rows} lignes = ${total} carrés de ${cfg.cellM} m × ${cfg.cellM} m</p></div>
+      <button class="btn btn-secondary" data-act="grid-settings">${ico('ruler',18)} Dimensions</button></div>
+    <div class="plan-bar">
+      <div class="plan-year"><button class="btn btn-secondary btn-icon" data-act="plan-year" data-d="-1" aria-label="Année précédente">${ico('chevron-left',18)}</button><span aria-live="polite">Saison ${Y}</span><button class="btn btn-secondary btn-icon" data-act="plan-year" data-d="1" aria-label="Année suivante">${ico('chevron-right',18)}</button></div>
+      <button class="btn ${planUI.mode ? 'btn-primary' : 'btn-secondary'}" data-act="plan-mode" aria-pressed="${planUI.mode}">${ico('mouse-pointer-click',18)} Sélection multiple</button>
+      <button class="btn btn-secondary" data-act="manage-zones">${ico('layers',18)} Zones</button>
+      <button class="btn btn-secondary" data-act="copy-zones">${ico('copy',18)} Copier les zones de ${Y-1}</button>
+    </div>
+    <p class="muted" style="margin-bottom:var(--space-3)">${planUI.mode ? 'Cliquez sur les carrés (ou sur une lettre ou un numéro) pour les sélectionner.' : 'Cliquez sur un carré pour le nommer, voir son historique et planter. Activez « Sélection multiple » pour agir sur plusieurs carrés.'}</p>
+    ${legend}
+    <div class="plan-scroll"><div class="plan-grid" style="--cols:${cfg.cols}" role="group" aria-label="Grille du jardin, saison ${Y}">${head}${body}</div></div>
+    ${selPanel}
+    <h2 class="section-title">Suggestions ${Y}</h2>
+    <div class="grid-2">
+      <section class="card"><h3 style="margin-top:0">Rotation et voisinage</h3>
+        <ul class="sug-list">
+          <li>${ico('square',16)} <strong>${plural(free.length,'carré')}</strong> libre${free.length>1?'s':''} sur ${total}.</li>
+          <li>${conflictCells.length ? `${ico('triangle-alert',16)} <strong>Conflit de rotation :</strong> ${esc(conflictCells.slice(0,10).map(codeOf).join(', '))}${conflictCells.length>10?'…':''} (même famille moins de ${ROTATION_YEARS + 1} ans d’intervalle).` : `${ico('circle-check',16)} Aucun conflit de rotation détecté.`}</li>
+        </ul>
+        <p class="hint" style="margin-top:var(--space-3)">Règle appliquée : pas de retour de la même famille avant ${ROTATION_YEARS + 1} ans. Après une famille gourmande, on propose une légumineuse ou une culture moins exigeante, et inversement. Ce sont des repères généraux, à adapter à votre sol.</p>
+      </section>
+      <section class="card"><h3 style="margin-top:0">Répartition par famille</h3>
+        ${famRows ? `<ul class="sug-list">${famRows}</ul>` : '<p class="muted">Aucune culture placée sur le plan pour cette saison.</p>'}
+      </section>
+    </div>
+    <section class="card" style="margin-top:var(--space-4)"><h3 style="margin-top:0">Graines à utiliser en priorité</h3>
+      ${seedSug ? `<ul class="sug-list">${seedSug}</ul>` : '<p class="muted">Aucun lot de graines à écouler en priorité.</p>'}
+    </section>
+  </div>`;
+}
+function cellModal(id){
+  const Y = planUI.year, cfg = gardenCfg(), idx = cultureIndex(), cd = cellDoc(id) || {}, p = parseCell(id);
+  const crops = cellCrops(idx, id, Y), sg = cellSuggest(idx, id, Y), issues = neighborIssues(idx, id, Y, cfg);
+  const years = [...new Set([Y, ...(idx.get(id) || []).map(c => c.year), ...Object.keys(cd.zones || {}).map(Number)])].sort((a,b) => b - a);
+  const prefPlants = state.plants.filter(pl => sg.prefer.includes(pl.family)).slice(0,6);
+  const fams = new Set([...sg.prefer, ...sg.others]);
+  const seedsOk = seedActive().filter(s => fams.has(seedFamily(s))).map(s => ({ s, st:seedStatus(s) })).sort((a,b) => LVL_RANK[a.st.lvl]-LVL_RANK[b.st.lvl]).slice(0,4);
+  return `<h2 id="modal-title">Carré ${cellCode(p.col,p.row)} · saison ${Y}</h2>
+    <p class="muted">${cfg.cellM} m × ${cfg.cellM} m · colonne ${colLetter(p.col)}, ligne ${p.row+1}</p>
+    <div class="form-row" style="margin-top:var(--space-3)">
+      <div class="field"><label for="cm-name">Nom du carré</label><input class="input" id="cm-name" value="${esc(cd.name)}" placeholder="Ex. Tomates sud"></div>
+      <div class="field"><label for="cm-zone">Zone en ${Y}</label><select class="input" id="cm-zone"><option value="">— Aucune —</option>${state.zones.map(z => `<option value="${z.id}" ${cd.zones && cd.zones[Y] === z.id ? 'selected' : ''}>${esc(z.name)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label for="cm-note">Notes sur ce carré</label><textarea class="input" id="cm-note">${esc(cd.note)}</textarea></div>
+    <h3>Cultures en ${Y}</h3>
+    ${crops.length ? `<ul class="sug-list">${crops.map(cu => { const cf = cellConflicts(idx, id, cu); return `<li><a class="chip" style="--h:${hue(famOfPlant(cu.plantId))}" href="#/plant/${cu.plantId}" data-act="close">${esc(label(byId(state.plants,cu.plantId)))}</a>
+      ${cu.cellIds.length > 1 ? `<span class="muted"> · ${cu.cellIds.length} carrés</span>` : ''}
+      <button class="btn btn-ghost" data-act="cell-rm-crop" data-cid="${cu.id}">${ico('x',16)} Retirer de ce carré</button>
+      ${cf.length ? `<br><span style="color:var(--color-warning)">${ico('triangle-alert',14)} Même famille déjà cultivée ici en ${[...new Set(cf.map(x => x.year))].join(', ')}.</span>` : ''}</li>`; }).join('')}</ul>` : '<p class="muted">Carré libre cette saison.</p>'}
+    <div class="sel-row"><div class="field"><label for="cm-crop">Ajouter une culture</label><select class="input" id="cm-crop">${cropOptions(Y)}</select></div>
+      <button class="btn btn-primary" data-act="cell-add-crop">${ico('plus',18)} Ajouter</button></div>
+    ${issues.length ? `<h3>Voisinage</h3><ul class="sug-list">${issues.map(x => `<li style="color:${x.type==='bad' ? 'var(--color-warning)' : 'var(--color-success)'}">${ico(x.type==='bad' ? 'triangle-alert' : 'circle-check',14)} ${esc(x.text)}</li>`).join('')}</ul>` : ''}
+    <h3>Suggestions pour ${Y}</h3>
+    <ul class="sug-list">
+      <li>${sg.avoid.size ? `${ico('ban',14)} <strong>À éviter :</strong> ${esc([...sg.avoid.entries()].map(([f,ys]) => `${f} (${ys.sort().join(', ')})`).join(' ; '))}.` : `${ico('circle-check',14)} Aucune famille à éviter d’après l’historique.`}</li>
+      <li>${ico('lightbulb',14)} <strong>Familles conseillées :</strong> ${esc(sg.prefer.slice(0,5).join(', ') || '—')}${sg.prev.length ? ` <span class="muted">(après ${esc([...new Set(sg.prev)].join(', '))} en ${Y-1})</span>` : ''}.</li>
+      ${prefPlants.length ? `<li>${ico('sprout',14)} <strong>Vos fiches adaptées :</strong> ${esc(prefPlants.map(label).join(', '))}.</li>` : ''}
+      ${seedsOk.length ? `<li>${ico('wheat',14)} <strong>Graines disponibles :</strong> ${seedsOk.map(({s,st}) => `${esc(s.species + ' ' + s.variety + ' ' + s.vintage)} <span class="lvl lvl-${st.lvl}">${LVL[st.lvl].short}</span>`).join(' · ')}</li>` : ''}
+    </ul>
+    <h3>Historique du carré</h3>
+    <table class="life-table" style="width:100%"><thead><tr><th>Année</th><th>Zone</th><th>Cultures</th></tr></thead><tbody>
+      ${years.map(y => { const z = cd.zones && cd.zones[y] ? byId(state.zones, cd.zones[y]) : null; const cs = cellCrops(idx, id, y);
+        return `<tr><th scope="row">${y}</th><td>${z ? esc(z.name) : '<span class="muted">—</span>'}</td><td>${cs.length ? cs.map(c => esc(label(byId(state.plants,c.plantId)))).join(', ') : '<span class="muted">Libre</span>'}</td></tr>`; }).join('')}
+    </tbody></table>
+    <div class="modal-actions"><button class="btn btn-primary" data-act="close">Fermer</button></div>`;
+}
+function openCell(id){ planUI.cell = id; openModal(cellModal(id)); }
+function zonesHtml(){
+  return `<h2 id="modal-title">Zones du jardin</h2>
+    <p class="muted">Une zone est un regroupement de carrés (par exemple « Planche tomates »). Chaque carré est rattaché à une zone saison par saison : vous pouvez donc redessiner vos zones d’une année à l’autre sans perdre l’historique.</p>
+    ${state.zones.length ? `<ul class="hist-list" style="margin-top:var(--space-3)">${state.zones.map(z => `<li><span><i class="sw" style="--zc:${esc(z.color)};margin-right:8px"></i><strong>${esc(z.name)}</strong>${z.note ? `<br><span class="muted" style="font-size:var(--text-sm)">${esc(z.note)}</span>` : ''}</span>
+      <span class="lot-tools"><button class="btn btn-secondary btn-icon" data-act="edit-zone" data-id="${z.id}" aria-label="Modifier la zone ${esc(z.name)}">${ico('pencil',18)}</button><button class="btn btn-ghost btn-icon" data-act="del-zone" data-id="${z.id}" aria-label="Supprimer la zone ${esc(z.name)}">${ico('trash-2',18)}</button></span></li>`).join('')}</ul>` : '<div class="empty"><h3>Aucune zone</h3><p>Créez votre première zone pour colorer le plan.</p></div>'}
+    <div class="modal-actions"><button class="btn btn-secondary" data-act="close">Fermer</button><button class="btn btn-primary" data-act="add-zone">${ico('plus',18)} Nouvelle zone</button></div>`;
+}
+function zoneForm(z={}){
+  const col = z.color || ZONE_COLORS[state.zones.length % ZONE_COLORS.length];
+  return `<form data-form="zone" data-id="${z.id||''}" novalidate><h2 id="modal-title">${z.id ? 'Modifier la zone' : 'Nouvelle zone'}</h2>
+    <div class="field"><label for="z-name">Nom *</label><input class="input" id="z-name" name="name" value="${esc(z.name)}" placeholder="Planche tomates"><p class="err pwa-hide" data-err="name">${ico('circle-alert',16)} Indiquez un nom.</p></div>
+    <div class="field"><label for="z-color">Couleur</label><input class="input" id="z-color" name="color" type="color" value="${esc(col)}" style="padding:4px"></div>
+    <div class="field"><label for="z-note">Notes</label><textarea class="input" id="z-note" name="note">${esc(z.note)}</textarea></div>
+    <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="manage-zones">Retour</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div></form>`;
+}
+function gridForm(){
+  const g = gardenCfg();
+  return `<form data-form="grid" novalidate><h2 id="modal-title">Dimensions du jardin</h2>
+    <p class="muted">Saisissez la largeur (colonnes) et la longueur (lignes) en mètres : le nombre de carrés est calculé automatiquement.</p>
+    <div class="form-row" style="margin-top:var(--space-3)">
+      <div class="field"><label for="gr-w">Largeur (m)</label><input class="input" id="gr-w" name="widthM" type="number" min="1" step="any" value="${g.widthM}"></div>
+      <div class="field"><label for="gr-l">Longueur (m)</label><input class="input" id="gr-l" name="lengthM" type="number" min="1" step="any" value="${g.lengthM}"></div>
+    </div>
+    <div class="field"><label for="gr-c">Côté d’un carré (m)</label><input class="input" id="gr-c" name="cellM" type="number" min="0.5" step="0.5" value="${g.cellM}"></div>
+    <p class="alert ok" id="gr-prev" role="status"></p>
+    <p class="err pwa-hide" data-err="size">${ico('circle-alert',16)} La grille doit comporter entre 1 et 60 colonnes et lignes.</p>
+    <p class="hint">Les carrés sortis de la grille (si vous la réduisez) ne sont pas effacés : leurs données reviennent si vous l’agrandissez de nouveau.</p>
+    <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div></form>`;
+}
+function gridCalc(){
+  const w = +$('#gr-w').value, l = +$('#gr-l').value, c = +$('#gr-c').value;
+  const cols = c > 0 ? Math.floor(w/c + 1e-9) : 0, rows = c > 0 ? Math.floor(l/c + 1e-9) : 0;
+  const el = $('#gr-prev'); if (el) el.textContent = (cols > 0 && rows > 0) ? `${w} m × ${l} m donnent ${cols} colonnes × ${rows} lignes, soit ${cols*rows} carrés de ${c} m × ${c} m.` : 'Dimensions invalides.';
+  return { cols, rows };
+}
+handlers.grid = f => {
+  const fd = Object.fromEntries(new FormData(f)); const { cols, rows } = gridCalc();
+  const ok = cols >= 1 && rows >= 1 && cols <= 60 && rows <= 60; showErr(f,'size',!ok); if (!ok) return;
+  let g = byId(state.gardens,'jardin');
+  const data = { name:'Mon jardin', widthM:+fd.widthM, lengthM:+fd.lengthM, cellM:+fd.cellM };
+  if (g) Object.assign(g, data); else { g = { id:'jardin', ...data }; state.gardens.push(g); }
+  touch(g); persist(); closeModal(); toast('Dimensions du jardin enregistrées'); render();
+};
+handlers.zone = f => {
+  const fd = Object.fromEntries(new FormData(f)); const name = fd.name.trim(); showErr(f,'name',!name); if (!name) return;
+  const data = { name, color:fd.color, note:fd.note.trim() };
+  let z = f.dataset.id ? byId(state.zones, f.dataset.id) : null;
+  if (z) Object.assign(z, data); else { z = { id:uid(), ...data }; state.zones.push(z); }
+  touch(z); persist(); toast('Zone enregistrée'); render(); openModal(zonesHtml());
+};
+function selectedIds(){ const cfg = gardenCfg(); return [...planUI.sel].filter(id => { const p = parseCell(id); return p && p.col < cfg.cols && p.row < cfg.rows; }); }
+Object.assign(actions, {
+  'plan-year': el => { planUI.year += +el.dataset.d; render(); },
+  'plan-mode': () => { planUI.mode = !planUI.mode; if (!planUI.mode) planUI.sel.clear(); render(); },
+  'cell-click': el => { const id = cellKey(+el.dataset.col, +el.dataset.row);
+    if (planUI.mode) { if (planUI.sel.has(id)) planUI.sel.delete(id); else planUI.sel.add(id); render(); } else openCell(id); },
+  'sel-col': el => { const cfg = gardenCfg(), c = +el.dataset.col; planUI.mode = true; for (let r = 0; r < cfg.rows; r++) planUI.sel.add(cellKey(c,r)); render(); },
+  'sel-row': el => { const cfg = gardenCfg(), r = +el.dataset.row; planUI.mode = true; for (let c = 0; c < cfg.cols; c++) planUI.sel.add(cellKey(c,r)); render(); },
+  'sel-clear': () => { planUI.sel.clear(); render(); },
+  'sel-zone': () => { const v = $('#ps-zone').value, ids = selectedIds(); if (!v) return toast('Choisissez une zone'); if (!ids.length) return;
+    ids.forEach(id => { const c = ensureCell(id); if (v === '__none') delete c.zones[planUI.year]; else c.zones[planUI.year] = v; touch(c); });
+    persist(); toast(v === '__none' ? 'Zone retirée' : `Zone affectée à ${plural(ids.length,'carré')}`); planUI.sel.clear(); render(); },
+  'sel-plant': () => { const v = $('#ps-crop').value, ids = selectedIds(); if (!v) return toast('Choisissez une culture'); if (!ids.length) return;
+    if (plantOnCells(v, ids, planUI.year)) { persist(); toast(`Culture placée sur ${plural(ids.length,'carré')}`); planUI.sel.clear(); render(); } },
+  'grid-settings': () => { openModal(gridForm()); gridCalc(); },
+  'manage-zones': () => openModal(zonesHtml()),
+  'add-zone': () => openModal(zoneForm()),
+  'edit-zone': el => openModal(zoneForm(byId(state.zones, el.dataset.id))),
+  'del-zone': el => { const z = byId(state.zones, el.dataset.id); if (!z) return;
+    confirmBox(`Supprimer la zone « ${z.name} » ? Les carrés qui y étaient rattachés n’auront plus de zone.`, () => {
+      state.cells.forEach(c => { let ch = false; Object.keys(c.zones || {}).forEach(y => { if (c.zones[y] === z.id) { delete c.zones[y]; ch = true; } }); if (ch) touch(c); });
+      removeItems('zones', x => x.id === z.id); persist(); toast('Zone supprimée'); render(); }); },
+  'copy-zones': () => { const Y = planUI.year; let n = 0;
+    state.cells.forEach(c => { const prev = c.zones && c.zones[Y-1]; if (prev && !c.zones[Y] && byId(state.zones, prev)) { c.zones[Y] = prev; touch(c); n++; } });
+    if (!n) return toast(`Rien à copier depuis ${Y-1}`);
+    persist(); toast(`Zones de ${Y-1} copiées sur ${plural(n,'carré')}`); render(); },
+  'cell-add-crop': () => { const v = $('#cm-crop').value; if (!v) return toast('Choisissez une culture');
+    if (plantOnCells(v, [planUI.cell], planUI.year)) { persist(); toast('Culture ajoutée au carré'); render(); openCell(planUI.cell); } },
+  'cell-rm-crop': el => { const c = byId(state.cultures, el.dataset.cid); if (!c) return;
+    c.cellIds = (c.cellIds || []).filter(x => x !== planUI.cell); touch(c); persist(); toast('Culture retirée du carré'); render(); openCell(planUI.cell); }
+});
+document.addEventListener('input', e => { if (['gr-w','gr-l','gr-c'].includes(e.target.id)) gridCalc(); });
+document.addEventListener('change', e => {
+  const t = e.target; if (!['cm-name','cm-zone','cm-note'].includes(t.id) || !planUI.cell) return;
+  const c = ensureCell(planUI.cell);
+  let msg = '';
+  if (t.id === 'cm-name') { c.name = t.value.trim(); msg = 'Carré renommé'; }
+  if (t.id === 'cm-zone') { if (t.value) c.zones[planUI.year] = t.value; else delete c.zones[planUI.year]; msg = 'Zone du carré modifiée'; }
+  if (t.id === 'cm-note') { c.note = t.value.trim(); msg = 'Note du carré enregistrée'; }
+  touch(c); persist(); toast(msg); render();
+});
+
+/* =====================================================================
    Router & chart
 ===================================================================== */
 function parseRoute(){ const h = location.hash.replace(/^#\/?/,'') || 'home'; const [name,id] = h.split('/'); return { name, id }; }
@@ -1326,7 +1748,7 @@ function drawChart(){
 function render(){
   const r = parseRoute();
   document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav === (r.name==='plant' ? 'lexique' : r.name)) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
-  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vGarden, graines:vSeeds, data:vData };
+  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vGarden, graines:vSeeds, plan:vPlan, data:vData };
   const main = $('#view');
   try { main.innerHTML = (views[r.name] || vHome)(r); }
   catch(err){ main.innerHTML = `<div class="alert bad" role="alert">${ico('circle-alert',18)}<span>Erreur d\u2019affichage : ${esc(err.message)}. Sauvegardez vos données puis rechargez la page.</span></div>`; }
@@ -1352,6 +1774,7 @@ async function init(){
   } else {
     state = await normalizeState(seed(), SEED_TS); state.meta = makeMeta(); persist(false);
   }
+  histReset();
   render();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 }
