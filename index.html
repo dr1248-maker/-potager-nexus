@@ -184,6 +184,24 @@ table.diff thead th{font-weight:700;color:var(--color-text-muted)}
 .year-row .cells{flex:1;display:flex;flex-wrap:wrap;gap:var(--space-2)}
 .canvas-wrap{position:relative;height:240px}
 .pwa-hide{display:none}
+
+:root,[data-theme="light"]{--lvl-ok:#437a22;--lvl-mid:#8a6d00;--lvl-warn:#b45309;--lvl-bad:#b91c1c}
+[data-theme="dark"]{--lvl-ok:#6daa45;--lvl-mid:#d4b13a;--lvl-warn:#e08a4a;--lvl-bad:#ef6b6b}
+.lvl-ok{--c:var(--lvl-ok)}.lvl-mid{--c:var(--lvl-mid)}.lvl-warn{--c:var(--lvl-warn)}.lvl-bad{--c:var(--lvl-bad)}.lvl-unk{--c:var(--color-text-muted)}
+.lvl{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:700;color:var(--c);background:color-mix(in oklab,var(--c) 14%,var(--color-surface));border:1px solid color-mix(in oklab,var(--c) 40%,transparent)}
+.stat.lvl-ok dd,.stat.lvl-mid dd,.stat.lvl-warn dd,.stat.lvl-bad dd{color:var(--c)}
+.seed-filters{display:grid;gap:var(--space-3);grid-template-columns:1fr;margin-bottom:var(--space-5);align-items:end}
+@media (min-width:768px){.seed-filters{grid-template-columns:2fr 1fr auto}}
+.seed-filters label.chk{display:flex;align-items:center;gap:var(--space-2);min-height:44px}
+.lots{list-style:none;display:grid;gap:var(--space-2);margin-top:var(--space-3)}
+.lots li{max-width:none}
+.lot{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-4);border:1px solid var(--color-divider);border-left:6px solid var(--c);border-radius:var(--radius-md);background:var(--color-surface)}
+.lot.lot-out{opacity:.6}
+.lot-main{flex:1 1 260px;min-width:0}
+.lot-title{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);font-weight:700}
+.lot-sub{font-size:var(--text-sm);color:var(--color-text-muted)}
+.lot-tools{display:flex;gap:var(--space-2)}
+.life-table td,.life-table th{padding:6px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--color-divider);font-size:var(--text-sm)}
 </style>
 </head>
 <body>
@@ -205,6 +223,7 @@ table.diff thead th{font-weight:700;color:var(--color-text-muted)}
 <nav class="sidenav" aria-label="Navigation principale">
   <a href="#/home" data-nav="home"><i data-lucide="layout-dashboard" width="24" height="24" aria-hidden="true"></i>Accueil</a>
   <a href="#/lexique" data-nav="lexique"><i data-lucide="book-open" width="24" height="24" aria-hidden="true"></i>Lexique</a>
+  <a href="#/graines" data-nav="graines"><i data-lucide="wheat" width="24" height="24" aria-hidden="true"></i>Graines</a>
   <a href="#/jardin" data-nav="jardin"><i data-lucide="map" width="24" height="24" aria-hidden="true"></i>Jardin</a>
   <a href="#/data" data-nav="data"><i data-lucide="database" width="24" height="24" aria-hidden="true"></i>Données</a>
 </nav>
@@ -228,9 +247,9 @@ table.diff thead th{font-weight:700;color:var(--color-text-muted)}
 /* =====================================================================
    Constants & helpers
 ===================================================================== */
-const APP_VERSION = 2;
+const APP_VERSION = 3;
 const SEED_TS = '2026-01-01T00:00:00.000Z';
-const COLLECTIONS = ['plants','cultures','beds','entries','photos'];
+const COLLECTIONS = ['plants','cultures','beds','entries','photos','seeds'];
 const STEPS = [
   { key:'semis',      label:'Semis',                 icon:'sprout' },
   { key:'rempotage',  label:'Rempotage',             icon:'flower-2' },
@@ -296,7 +315,7 @@ const DB = {
       try { const t = this.db.transaction('kv','readwrite'); t.objectStore('kv').put(v,k);
         t.oncomplete = () => res(true); t.onerror = () => res(false); t.onabort = () => res(false); } catch(e){ res(false); } }); }
 };
-let state = { plants:[], cultures:[], beds:[], entries:[], photos:[], tombstones:{}, meta:makeMeta() };
+let state = { plants:[], cultures:[], beds:[], entries:[], photos:[], seeds:[], tombstones:{}, meta:makeMeta() };
 let saveTimer, backupAvailable = false;
 function persist(markDirty=true){
   if (markDirty) state.meta.dirty = true;
@@ -416,7 +435,14 @@ function seed(){
     {id:'e2',plantId:'p1',date:`${Y}-06-02`,text:'Gourmands retirés et palissage fait. Début de floraison sur le 2e étage.',photo:null},
     {id:'e3',plantId:'p4',date:`${Y}-07-03`,text:'Oïdium léger sur les feuilles basses : traitement au lait dilué (1/10).',photo:null}
   ];
-  const s = { plants, cultures, beds, entries, photos:[], tombstones:{} };
+  const seeds = [
+    {id:'s1',plantId:'p2',species:'Tomate',variety:'Noire de Crimée',vintage:Y-1,origin:'achat',supplier:'Sachet acheté (exemple)',cultureId:'',qty:30,unit:'graines',location:'Boîte à graines',lifeYears:'',germDate:'',germPct:'',notes:'',empty:false},
+    {id:'s2',plantId:'p2',species:'Tomate',variety:'Noire de Crimée',vintage:Y,origin:'recolte',supplier:'',cultureId:'c8',qty:60,unit:'graines',location:'Boîte à graines',lifeYears:'',germDate:'',germPct:'',notes:'Récoltées sur la serre.',empty:false},
+    {id:'s3',plantId:'p5',species:'Haricot',variety:'Contender (nain)',vintage:Y-1,origin:'recolte',supplier:'',cultureId:'c3',qty:80,unit:'graines',location:'Bocal',lifeYears:'',germDate:'',germPct:'',notes:'',empty:false},
+    {id:'s4',plantId:'p6',species:'Carotte',variety:'Nantaise 2',vintage:Y-3,origin:'achat',supplier:'Sachet acheté (exemple)',cultureId:'',qty:1,unit:'sachet(s)',location:'Boîte à graines',lifeYears:'',germDate:'',germPct:'',notes:'',empty:false},
+    {id:'s5',plantId:'p7',species:'Laitue',variety:'Batavia Reine des Glaces',vintage:Y-4,origin:'achat',supplier:'',cultureId:'',qty:'',unit:'graines',location:'',lifeYears:'',germDate:'',germPct:'',notes:'',empty:false}
+  ];
+  const s = { plants, cultures, beds, entries, photos:[], seeds, tombstones:{} };
   COLLECTIONS.forEach(k => s[k].forEach(x => { x.updatedAt = SEED_TS; }));
   return s;
 }
@@ -491,6 +517,7 @@ function vHome(){
   return `
   <div class="main-inner">
     <div class="page-header"><div><h1 class="page-title">Mon potager</h1><p class="page-sub">Saison ${Y} · vue d\u2019ensemble</p></div></div>
+    ${seedHomeAlert()}
     <dl class="stats">
       <div class="stat"><dt>Fiches</dt><dd>${state.plants.length}</dd></div>
       <div class="stat"><dt>Espèces</dt><dd>${species}</dd></div>
@@ -553,6 +580,7 @@ function cultureCard(c){
     ${conf.length ? `<div class="alert" style="margin-top:var(--space-3);margin-bottom:0" role="alert">${ico('triangle-alert',18)}<span>Rotation : des ${esc(fam)} ont déjà été cultivées ici en ${[...new Set(conf.map(x => x.year))].join(', ')}.</span></div>` : ''}
     <ul class="steps">${STEPS.map(s => { const d = c.dates && c.dates[s.key];
       return `<li>${ico(s.icon,20)}<span class="label-s">${s.label}</span>${d ? `<span>${fmtDate(d)}</span><span class="badge ${d>t?'':'badge-ok'}">${d>t?'Prévu':'Fait'}</span>` : `<span class="none">—</span>`}</li>`; }).join('')}</ul>
+    ${c.dates && c.dates.graines ? `<div style="margin-top:var(--space-3)"><button class="btn btn-secondary" data-act="seed-from-culture" data-id="${c.id}">${ico('wheat',18)} Créer un lot de graines</button></div>` : ''}
     ${c.note ? `<p class="muted" style="margin-top:var(--space-3)">${esc(c.note)}</p>` : ''}
   </article>`;
 }
@@ -821,7 +849,7 @@ function exportPayload(embedThumbs){
     format:'potager-nexus', version:APP_VERSION,
     meta:{ exportedAt:nowISO(), deviceId:state.meta.deviceId, deviceName:state.meta.deviceName, photos:embedThumbs ? 'miniatures-incluses' : 'dossier-photos', counts },
     data:{
-      plants:state.plants, cultures:state.cultures, beds:state.beds, entries:state.entries, tombstones:state.tombstones,
+      plants:state.plants, cultures:state.cultures, beds:state.beds, entries:state.entries, seeds:state.seeds, tombstones:state.tombstones,
       photos:state.photos.map(p => ({ id:p.id, file:p.file, ownerType:p.ownerType, updatedAt:p.updatedAt, hasFull:!!p.full, ...(embedThumbs ? { thumb:p.thumb } : {}) }))
     }
   };
@@ -881,7 +909,7 @@ async function readBackupFile(file){
   const d = j.data || j;
   if (!d || !Array.isArray(d.plants) || !Array.isArray(d.cultures)) throw new Error('Ce fichier n\u2019est pas une sauvegarde Potager Nexus.');
   const meta = j.meta || { exportedAt:j.exportedAt };
-  const remote = { plants:d.plants, cultures:d.cultures, beds:d.beds||[], entries:d.entries||[], photos:[], tombstones:d.tombstones||{} };
+  const remote = { plants:d.plants, cultures:d.cultures, beds:d.beds||[], entries:d.entries||[], seeds:d.seeds||[], photos:[], tombstones:d.tombstones||{} };
   for (const rp of (d.photos||[])) {
     if (!rp || !rp.id) continue;
     const ph = { id:rp.id, file:rp.file, ownerType:rp.ownerType, updatedAt:rp.updatedAt, thumb:rp.thumb||null, full:null };
@@ -907,7 +935,7 @@ async function handleRestoreFile(file){
       <div class="modal-actions"><button class="btn btn-secondary" data-act="open-backup">Retour</button></div>`);
   }
 }
-const LBL = { plants:'Fiches', cultures:'Cultures', beds:'Emplacements', entries:'Notes', photos:'Photos' };
+const LBL = { plants:'Fiches', cultures:'Cultures', beds:'Emplacements', entries:'Notes', seeds:'Lots de graines', photos:'Photos' };
 function importPreviewHtml(){
   const pi = pendingImport, st = pi.stats, m = state.meta, rm = pi.meta || {};
   const older = rm.exportedAt && m.lastExportAt && rm.exportedAt < m.lastExportAt;
@@ -934,7 +962,7 @@ async function applyImport(mode){
   } else {
     const r = pi.remote;
     r.photos.forEach(rp => { if (!rp.full) { const lp = photoOf(rp.id); if (lp && lp.full) rp.full = lp.full; } });
-    state = { plants:r.plants, cultures:r.cultures, beds:r.beds, entries:r.entries, photos:r.photos, tombstones:r.tombstones, meta:{ ...meta, dirty:false } };
+    state = { plants:r.plants, cultures:r.cultures, beds:r.beds, entries:r.entries, seeds:r.seeds||[], photos:r.photos, tombstones:r.tombstones, meta:{ ...meta, dirty:false } };
   }
   pendingImport = null; persist(false); closeModal();
   toast(mode === 'merge' ? 'Fusion appliquée. Pensez à sauvegarder le résultat.' : 'Sauvegarde restaurée.');
@@ -1021,6 +1049,261 @@ document.addEventListener('click', e => {
 });
 $('#theme-toggle').addEventListener('click', () => { theme = theme==='dark' ? 'light' : 'dark'; applyTheme(); if (parseRoute().name==='home') drawChart(); });
 
+
+/* =====================================================================
+   Stock de graines (livraison 1)
+===================================================================== */
+const SEED_LIFE_SRC = 'https://www.pomologie.fr/duree-germinative-des-graines-potageres-les-points-a-connaitre/';
+const SEED_LIFE_VEG = {
+  1:['Haricot','Panais'],
+  2:['Cerfeuil','Maïs','Oignon','Persil','Salsifis','Scorsonère'],
+  3:['Aneth','Carotte','Laitue','Piment','Pissenlit','Poireau','Pois','Poivron'],
+  4:['Arachide','Arroche','Brocoli','Ciboulette','Cresson','Fenouil','Mâche','Pastèque','Pâtisson','Romarin','Roquette','Sauge','Tétragone','Thym','Tomate'],
+  5:['Asperge','Bette','Betterave','Chou','Épinard','Melon','Navet','Radis','Rutabaga'],
+  6:['Aubergine','Coriandre','Fève'],
+  7:['Artichaut','Tournesol'],
+  8:['Basilic','Céleri','Chicorée','Courgette'],
+  9:['Physalis'],
+  10:['Concombre','Courge']
+};
+const SEED_LIFE_FLOWER = {
+  1:['Balsamine','Dahlia','Impatiens','Primevère'],
+  2:['Agératum','Ancolie','Clarkia','Cléome','Coléus','Gloxinia','Muflier','Pavot','Pyrèthre','Reine-marguerite'],
+  3:['Agastache','Capucine','Centaurée','Chrysanthème','Cosmos','Godétia','Lupin','Némésia','Nigelle','Œillet','Pâquerette','Zinnia'],
+  4:['Alysse','Coréopsis','Ipomée','Molène','Pensée','Phacélie','Ricin','Rose trémière','Rudbeckia','Scabieuse','Souci'],
+  5:['Campanule','Gaillarde','Giroflée','Immortelle','Lobélia','Myosotis','Tagète','Pois de senteur'],
+  6:['Cinéraire','Pétunia'],
+  7:['Amarante','Bégonia'],
+  8:['Bourrache','Réséda']
+};
+const SEED_ALIAS = { potiron:'courge', potimarron:'courge', butternut:'courge', citrouille:'courge', giraumon:'courge', salade:'laitue', batavia:'laitue', romaine:'laitue', endive:'chicoree', mais:'mais', oignons:'oignon', 'haricot vert':'haricot' };
+const nrm2 = s => norm(s).replace(/œ/g,'oe');
+const SEED_INDEX = (() => {
+  const out = [];
+  const add = (obj, kind) => Object.entries(obj).forEach(([y,names]) => names.forEach(name => out.push({ key:nrm2(name), name, years:+y, kind })));
+  add(SEED_LIFE_VEG,'potager'); add(SEED_LIFE_FLOWER,'fleur');
+  Object.entries(SEED_ALIAS).forEach(([a,t]) => { const ref = out.find(o => o.key===t); if (ref && a!==t) out.push({ key:a, name:ref.name, years:ref.years, kind:ref.kind, alias:true }); });
+  out.forEach(o => { o.re = new RegExp('(^|[^a-z])' + o.key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '[sx]?($|[^a-z])'); });
+  return out.sort((a,b) => b.key.length - a.key.length);
+})();
+const LVL = {
+  ok:  { short:'Bon état',        icon:'circle-check' },
+  mid: { short:'À utiliser',      icon:'clock' },
+  warn:{ short:'Dernière saison', icon:'triangle-alert' },
+  bad: { short:'Périmé',          icon:'octagon-alert' },
+  unk: { short:'Durée inconnue',  icon:'circle-help' }
+};
+const LVL_RANK = { bad:0, warn:1, mid:2, ok:3, unk:4 };
+const plural = (n, w) => `${n} ${w}${n>1?'s':''}`;
+
+function seedRef(sd){
+  if (sd.lifeYears !== '' && sd.lifeYears != null && +sd.lifeYears > 0) return { years:+sd.lifeYears, name:'Durée personnalisée', custom:true };
+  const n = nrm2(sd.species); if (!n) return null;
+  const hit = SEED_INDEX.find(o => o.re.test(n));
+  return hit ? { years:hit.years, name:hit.name, custom:false } : null;
+}
+function seedStatus(sd, Y=new Date().getFullYear()){
+  const ref = seedRef(sd), age = Math.max(0, Y - (+sd.vintage || Y));
+  if (!ref) return { lvl:'unk', age, ref:null, msg:'Durée de conservation inconnue pour cette espèce : renseignez-la dans le lot.' };
+  const ratio = age / ref.years;
+  let lvl = ratio < .5 ? 'ok' : ratio < .8 ? 'mid' : ratio <= 1 ? 'warn' : 'bad';
+  let note = '';
+  const gp = (sd.germPct === '' || sd.germPct == null) ? null : +sd.germPct;
+  if (gp !== null && !isNaN(gp)) {
+    if (gp < 50 && lvl !== 'bad') { lvl = 'bad'; note = ` Germination mesurée faible (${gp} %).`; }
+    else if (gp < 70 && (lvl === 'ok' || lvl === 'mid')) { lvl = 'warn'; note = ` Germination mesurée moyenne (${gp} %).`; }
+    else note = ` Germination mesurée : ${gp} %.`;
+  }
+  const left = ref.years - age;
+  const base = age > ref.years ? `Dépassé de ${plural(age-ref.years,'an')} (référence : ${plural(ref.years,'an')}).`
+    : left === 0 ? `Dernière saison recommandée (référence : ${plural(ref.years,'an')}).`
+    : `${plural(left,'an')} restant${left>1?'s':''} sur ${ref.years}.`;
+  return { lvl, age, ref, msg:base + note };
+}
+const seedAgeTxt = age => age === 0 ? 'de cette année' : plural(age,'an');
+const seedActive = () => state.seeds.filter(s => !s.empty);
+function seedAlerts(){ return seedActive().map(s => ({ s, st:seedStatus(s) })).filter(x => x.st.lvl==='warn' || x.st.lvl==='bad'); }
+function seedHomeAlert(){
+  const a = seedAlerts(); if (!a.length) return '';
+  const bad = a.filter(x => x.st.lvl==='bad').length, warn = a.length - bad;
+  const parts = [bad ? `${plural(bad,'lot')} périmé${bad>1?'s':''}` : '', warn ? `${plural(warn,'lot')} en dernière saison` : ''].filter(Boolean).join(' · ');
+  return `<div class="alert" role="status">${ico('wheat',18)}<span><strong>Graines :</strong> ${parts}. <a href="#/graines">Voir le stock</a></span></div>`;
+}
+
+let seedUI = { q:'', lvl:'all', out:false };
+function lotRow(sd){
+  const st = seedStatus(sd), L = LVL[st.lvl];
+  const origin = sd.origin === 'recolte' ? `${ico('sprout',16)} Récoltée` : `${ico('shopping-bag',16)} Achetée`;
+  const src = sd.supplier ? ` · ${esc(sd.supplier)}` : '';
+  const qty = (sd.qty !== '' && sd.qty != null) ? `${esc(sd.qty)} ${esc(sd.unit||'')}` : 'quantité non précisée';
+  const loc = sd.location ? ` · ${ico('map-pin',14)} ${esc(sd.location)}` : '';
+  const nm = `${sd.species} ${sd.variety} ${sd.vintage}`;
+  return `<li class="lot lvl-${st.lvl} ${sd.empty?'lot-out':''}">
+    <div class="lot-main">
+      <div class="lot-title"><span>${esc(String(sd.vintage))}</span><span class="lvl lvl-${st.lvl}">${ico(L.icon,14)} ${sd.empty ? 'Épuisé' : L.short}</span><span class="muted" style="font-weight:400;font-size:var(--text-sm)">${origin}${src}</span></div>
+      <p class="lot-sub">Âge : ${seedAgeTxt(st.age)} · ${qty}${loc}</p>
+      ${sd.empty ? '' : `<p class="lot-sub">${esc(st.msg)}</p>`}
+      ${sd.notes ? `<p class="lot-sub">${esc(sd.notes)}</p>` : ''}
+    </div>
+    <div class="lot-tools">
+      <button class="btn btn-secondary btn-icon" data-act="germ-seed" data-id="${sd.id}" aria-label="Enregistrer un test de germination : ${esc(nm)}">${ico('flask-conical',18)}</button>
+      <button class="btn btn-secondary btn-icon" data-act="edit-seed" data-id="${sd.id}" aria-label="Modifier : ${esc(nm)}">${ico('pencil',18)}</button>
+      <button class="btn btn-ghost btn-icon" data-act="toggle-empty-seed" data-id="${sd.id}" aria-label="${sd.empty?'Remettre en stock':'Marquer comme épuisé'} : ${esc(nm)}">${ico(sd.empty?'archive-restore':'archive',18)}</button>
+      <button class="btn btn-ghost btn-icon" data-act="del-seed" data-id="${sd.id}" aria-label="Supprimer : ${esc(nm)}">${ico('trash-2',18)}</button>
+    </div>
+  </li>`;
+}
+function seedListHtml(){
+  const q = norm(seedUI.q);
+  const rows = state.seeds.filter(sd => {
+    if (sd.empty && !seedUI.out) return false;
+    if (q && !norm([sd.species, sd.variety, sd.supplier, sd.location, sd.notes].join(' ')).includes(q)) return false;
+    if (seedUI.lvl !== 'all' && seedStatus(sd).lvl !== seedUI.lvl) return false;
+    return true;
+  });
+  if (!rows.length) return `<div class="empty"><h3>${state.seeds.length ? 'Aucun lot ne correspond' : 'Aucun lot de graines'}</h3><p>${state.seeds.length ? 'Modifiez la recherche ou les filtres.' : 'Ajoutez vos sachets achetés et les graines récoltées pour suivre leur âge et leur durée de conservation.'}</p>${state.seeds.length ? '' : `<button class="btn btn-primary" data-act="new-seed">${ico('plus',18)} Nouveau lot</button>`}</div>`;
+  const groups = new Map();
+  rows.forEach(sd => { const k = nrm2(sd.species) + '|' + nrm2(sd.variety); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(sd); });
+  const arr = [...groups.values()].sort((a,b) => (a[0].species+a[0].variety).localeCompare(b[0].species+b[0].variety,'fr'));
+  return arr.map(g => {
+    g.sort((a,b) => (+b.vintage) - (+a.vintage));
+    const worst = g.filter(x => !x.empty).map(x => seedStatus(x).lvl).sort((a,b) => LVL_RANK[a]-LVL_RANK[b])[0];
+    const total = g.filter(x => !x.empty).length;
+    return `<section class="card" style="margin-bottom:var(--space-4)" aria-label="${esc(g[0].species+' '+g[0].variety)}">
+      <div class="culture-head"><h2 style="font-size:var(--text-lg)">${esc(g[0].species)} · ${esc(g[0].variety)}</h2>
+        <span class="count">${plural(total,'lot')} en stock</span></div>
+      <ul class="lots">${g.map(lotRow).join('')}</ul></section>`;
+  }).join('');
+}
+function refreshSeedList(){ const el = $('#seed-list'); if (el) { el.innerHTML = seedListHtml(); refreshIcons(); } }
+function lifeTableHtml(){
+  const row = (obj) => Object.entries(obj).map(([y,names]) => `<tr><th scope="row">${plural(+y,'an')}</th><td>${names.map(esc).join(', ')}</td></tr>`).join('');
+  return `<details class="card" style="margin-top:var(--space-6)"><summary style="cursor:pointer;font-weight:700">Durées de conservation de référence</summary>
+    <p class="muted" style="margin:var(--space-3) 0">Source : <a href="${SEED_LIFE_SRC}" target="_blank" rel="noopener">Centre National de Pomologie</a>. Les graines perdent en moyenne 20 à 30 % de leur faculté germinative chaque année ; stockage conseillé à l’abri de la chaleur, de la lumière et de l’humidité, vers 5 à 10 °C. « Aneth » correspond à « Anteh » dans le tableau d’origine.</p>
+    <h3>Plantes potagères</h3><table class="life-table"><tbody>${row(SEED_LIFE_VEG)}</tbody></table>
+    <h3>Fleurs</h3><table class="life-table"><tbody>${row(SEED_LIFE_FLOWER)}</tbody></table>
+    <p class="hint" style="margin-top:var(--space-3)">Codes couleur : vert = moins de 50 % de la durée ; jaune = 50 à 79 % ; orange = 80 à 100 % (dernière saison) ; rouge = durée dépassée ou germination mesurée sous 50 %.</p>
+  </details>`;
+}
+function vSeeds(){
+  const act = seedActive().map(s => seedStatus(s).lvl);
+  const n = l => act.filter(x => x === l).length;
+  const alerts = seedAlerts().sort((a,b) => LVL_RANK[a.st.lvl]-LVL_RANK[b.st.lvl]);
+  return `<div class="main-inner">
+    <div class="page-header"><div><h1 class="page-title">Stock de graines</h1><p class="page-sub">Âge de chaque lot comparé à la durée de conservation recommandée · ${new Date().getFullYear()}</p></div>
+      <button class="btn btn-primary" data-act="new-seed">${ico('plus',18)} Nouveau lot</button></div>
+    <dl class="stats">
+      <div class="stat lvl-ok"><dt>Lots en bon état</dt><dd>${n('ok')}</dd></div>
+      <div class="stat lvl-mid"><dt>À utiliser en priorité</dt><dd>${n('mid')}</dd></div>
+      <div class="stat lvl-warn"><dt>Dernière saison</dt><dd>${n('warn')}</dd></div>
+      <div class="stat lvl-bad"><dt>Périmés</dt><dd>${n('bad')}</dd></div>
+    </dl>
+    ${alerts.length ? `<div class="alert" role="alert">${ico('triangle-alert',18)}<span><strong>À tester ou renouveler :</strong> ${alerts.slice(0,6).map(x => esc(`${x.s.species} ${x.s.variety} ${x.s.vintage}`)).join(', ')}${alerts.length>6 ? ` et ${alerts.length-6} autre${alerts.length-6>1?'s':''}` : ''}.</span></div>` : ''}
+    <div class="seed-filters">
+      <div class="field" style="margin:0"><label for="seed-q">Rechercher</label><input class="input" id="seed-q" type="search" placeholder="Espèce, variété, fournisseur, lieu…" value="${esc(seedUI.q)}"></div>
+      <div class="field" style="margin:0"><label for="seed-lvl">État</label><select class="input" id="seed-lvl">
+        ${[['all','Tous'],['ok','Bon état'],['mid','À utiliser en priorité'],['warn','Dernière saison'],['bad','Périmés'],['unk','Durée inconnue']].map(([v,t]) => `<option value="${v}" ${seedUI.lvl===v?'selected':''}>${t}</option>`).join('')}</select></div>
+      <label class="chk"><input type="checkbox" id="seed-out" ${seedUI.out?'checked':''}> Afficher les lots épuisés</label>
+    </div>
+    <div id="seed-list">${seedListHtml()}</div>
+    ${lifeTableHtml()}
+  </div>`;
+}
+function seedForm(sd={}){
+  const Y = new Date().getFullYear();
+  const known = [...new Set([...SEED_INDEX.filter(o => !o.alias).map(o => o.name), ...state.plants.map(p => p.species)])].sort((a,b) => a.localeCompare(b,'fr'));
+  const plants = [...state.plants].sort((a,b) => label(a).localeCompare(label(b),'fr'));
+  const cults = [...state.cultures].sort((a,b) => b.year - a.year);
+  const sel = (v, cur) => v === cur ? 'selected' : '';
+  return `<form data-form="seed" data-id="${sd.id||''}" novalidate>
+    <h2 id="modal-title">${sd.id ? 'Modifier le lot de graines' : 'Nouveau lot de graines'}</h2>
+    <div class="field"><label for="s-plant">Fiche liée (facultatif)</label><select class="input" id="s-plant" name="plantId"><option value="">— Aucune —</option>${plants.map(p => `<option value="${p.id}" ${sel(p.id, sd.plantId)}>${esc(label(p))}</option>`).join('')}</select></div>
+    <div class="form-row">
+      <div class="field"><label for="s-species">Espèce *</label><input class="input" id="s-species" name="species" list="dl-species" value="${esc(sd.species)}" placeholder="Tomate" autocomplete="off"><datalist id="dl-species">${known.map(n => `<option value="${esc(n)}"></option>`).join('')}</datalist><p class="err pwa-hide" data-err="species">${ico('circle-alert',16)} Indiquez l’espèce.</p></div>
+      <div class="field"><label for="s-variety">Variété *</label><input class="input" id="s-variety" name="variety" value="${esc(sd.variety)}" placeholder="Noire de Crimée"><p class="err pwa-hide" data-err="variety">${ico('circle-alert',16)} Indiquez la variété.</p></div>
+    </div>
+    <p class="hint" id="s-life-hint"></p>
+    <div class="form-row">
+      <div class="field"><label for="s-vintage">Millésime (année d’achat ou de récolte) *</label><input class="input" id="s-vintage" name="vintage" type="number" min="1990" max="${Y+1}" value="${sd.vintage ?? Y}"><p class="err pwa-hide" data-err="vintage">${ico('circle-alert',16)} Année invalide.</p></div>
+      <div class="field"><label for="s-origin">Origine</label><select class="input" id="s-origin" name="origin"><option value="achat" ${sel('achat', sd.origin||'achat')}>Achetée</option><option value="recolte" ${sel('recolte', sd.origin)}>Issue de ma récolte</option></select></div>
+    </div>
+    <div class="field"><label for="s-supplier">Fournisseur ou source</label><input class="input" id="s-supplier" name="supplier" value="${esc(sd.supplier)}" placeholder="Nom du semencier, échange, don…"></div>
+    <div class="field"><label for="s-culture">Culture d’origine (si récoltée)</label><select class="input" id="s-culture" name="cultureId"><option value="">— Aucune —</option>${cults.map(c => `<option value="${c.id}" ${sel(c.id, sd.cultureId)}>${esc(label(byId(state.plants,c.plantId)))} · ${c.year}</option>`).join('')}</select></div>
+    <div class="form-row">
+      <div class="field"><label for="s-qty">Quantité</label><input class="input" id="s-qty" name="qty" type="number" min="0" step="any" value="${sd.qty ?? ''}"></div>
+      <div class="field"><label for="s-unit">Unité</label><select class="input" id="s-unit" name="unit">${['graines','g','sachet(s)'].map(u => `<option value="${u}" ${sel(u, sd.unit||'graines')}>${u}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label for="s-loc">Lieu de stockage</label><input class="input" id="s-loc" name="location" value="${esc(sd.location)}" placeholder="Boîte à graines, frigo…"></div>
+    <div class="field"><label for="s-life">Durée de conservation personnalisée (années, facultatif)</label><input class="input" id="s-life" name="lifeYears" type="number" min="1" max="30" value="${sd.lifeYears ?? ''}"></div>
+    <div class="form-row">
+      <div class="field"><label for="s-gd">Dernier test de germination</label><input class="input" id="s-gd" name="germDate" type="date" value="${esc(sd.germDate)}"></div>
+      <div class="field"><label for="s-gp">Résultat (% germé)</label><input class="input" id="s-gp" name="germPct" type="number" min="0" max="100" value="${sd.germPct ?? ''}"></div>
+    </div>
+    <div class="field"><label for="s-notes">Notes</label><textarea class="input" id="s-notes" name="notes">${esc(sd.notes)}</textarea></div>
+    <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div>
+  </form>`;
+}
+function germForm(sd){
+  return `<form data-form="germ" data-id="${sd.id}" novalidate>
+    <h2 id="modal-title">Test de germination</h2>
+    <p class="muted">${esc(sd.species)} · ${esc(sd.variety)} · ${esc(String(sd.vintage))}. Posez quelques graines sur un coton humide à température stable, puis notez la part qui a germé.</p>
+    <div class="form-row" style="margin-top:var(--space-4)">
+      <div class="field"><label for="g-date">Date du test</label><input class="input" id="g-date" name="germDate" type="date" value="${today()}"></div>
+      <div class="field"><label for="g-pct">Résultat (% germé) *</label><input class="input" id="g-pct" name="germPct" type="number" min="0" max="100" value="${sd.germPct ?? ''}"><p class="err pwa-hide" data-err="germPct">${ico('circle-alert',16)} Saisissez un pourcentage entre 0 et 100.</p></div>
+    </div>
+    <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div>
+  </form>`;
+}
+function updateSeedHint(){
+  const h = $('#s-life-hint'); if (!h) return;
+  const ref = seedRef({ species:$('#s-species').value, lifeYears:$('#s-life').value });
+  h.innerHTML = ref ? `${ico('info',16)} ${ref.custom ? 'Durée personnalisée' : 'Référence Pomologie (' + esc(ref.name) + ')'} : ${plural(ref.years,'an')}.`
+    : `${ico('circle-help',16)} Espèce absente de la liste : indiquez une durée personnalisée plus bas.`;
+  refreshIcons();
+}
+handlers.seed = f => {
+  const fd = Object.fromEntries(new FormData(f)); const Y = new Date().getFullYear();
+  const sp = fd.species.trim(), va = fd.variety.trim(), vin = parseInt(fd.vintage,10), vOk = vin >= 1990 && vin <= Y+1;
+  showErr(f,'species',!sp); showErr(f,'variety',!va); showErr(f,'vintage',!vOk);
+  if (!sp || !va || !vOk) return;
+  const num = v => (v === '' || v == null) ? '' : +v;
+  const data = { plantId:fd.plantId||'', species:sp, variety:va, vintage:vin, origin:fd.origin, supplier:fd.supplier.trim(), cultureId:fd.cultureId||'',
+    qty:num(fd.qty), unit:fd.unit, location:fd.location.trim(), lifeYears:num(fd.lifeYears), germDate:fd.germDate||'', germPct:num(fd.germPct), notes:fd.notes.trim() };
+  const ex = f.dataset.id ? byId(state.seeds, f.dataset.id) : null;
+  if (ex) touch(Object.assign(ex, data)); else state.seeds.push(touch({ id:uid(), ...data, empty:false }));
+  persist(); closeModal(); toast('Lot de graines enregistré'); go('#/graines');
+};
+handlers.germ = f => {
+  const fd = Object.fromEntries(new FormData(f)); const pct = fd.germPct === '' ? NaN : +fd.germPct;
+  const ok = !isNaN(pct) && pct >= 0 && pct <= 100; showErr(f,'germPct',!ok); if (!ok) return;
+  const sd = byId(state.seeds, f.dataset.id); if (!sd) return;
+  sd.germDate = fd.germDate || today(); sd.germPct = pct; touch(sd);
+  persist(); closeModal(); toast('Test de germination enregistré'); render();
+};
+Object.assign(actions, {
+  'new-seed': () => { openModal(seedForm()); updateSeedHint(); },
+  'edit-seed': el => { openModal(seedForm(byId(state.seeds, el.dataset.id))); updateSeedHint(); },
+  'germ-seed': el => openModal(germForm(byId(state.seeds, el.dataset.id))),
+  'toggle-empty-seed': el => { const sd = byId(state.seeds, el.dataset.id); if (!sd) return; sd.empty = !sd.empty; touch(sd); persist(); toast(sd.empty ? 'Lot marqué comme épuisé' : 'Lot remis en stock'); render(); },
+  'del-seed': el => { const sd = byId(state.seeds, el.dataset.id); if (!sd) return;
+    confirmBox(`Supprimer le lot « ${sd.species} ${sd.variety} ${sd.vintage} » ?`, () => { removeItems('seeds', x => x.id === sd.id); persist(); toast('Lot supprimé'); render(); }); },
+  'seed-from-culture': el => { const c = byId(state.cultures, el.dataset.id), p = c && byId(state.plants, c.plantId); if (!c || !p) return;
+    openModal(seedForm({ plantId:p.id, species:p.species, variety:p.variety, vintage:c.year, origin:'recolte', cultureId:c.id, unit:'graines' })); updateSeedHint(); }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 's-species' || t.id === 's-life') updateSeedHint();
+  if (t.id === 'seed-q') { seedUI.q = t.value; refreshSeedList(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'seed-lvl') { seedUI.lvl = t.value; refreshSeedList(); }
+  if (t.id === 'seed-out') { seedUI.out = t.checked; refreshSeedList(); }
+  if (t.id === 's-plant') { const p = byId(state.plants, t.value); if (p) { $('#s-species').value = p.species; $('#s-variety').value = p.variety; updateSeedHint(); } }
+  if (t.id === 's-culture') { const c = byId(state.cultures, t.value), p = c && byId(state.plants, c.plantId);
+    if (c && p) { $('#s-plant').value = p.id; $('#s-species').value = p.species; $('#s-variety').value = p.variety; $('#s-vintage').value = c.year; $('#s-origin').value = 'recolte'; updateSeedHint(); } }
+});
+
 /* =====================================================================
    Router & chart
 ===================================================================== */
@@ -1043,7 +1326,7 @@ function drawChart(){
 function render(){
   const r = parseRoute();
   document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav === (r.name==='plant' ? 'lexique' : r.name)) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
-  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vGarden, data:vData };
+  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vGarden, graines:vSeeds, data:vData };
   const main = $('#view');
   try { main.innerHTML = (views[r.name] || vHome)(r); }
   catch(err){ main.innerHTML = `<div class="alert bad" role="alert">${ico('circle-alert',18)}<span>Erreur d\u2019affichage : ${esc(err.message)}. Sauvegardez vos données puis rechargez la page.</span></div>`; }
