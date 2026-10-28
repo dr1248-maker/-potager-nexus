@@ -228,6 +228,16 @@ button.plan-h:hover{background:var(--color-primary-highlight)}
 .sug-list li{max-width:none;font-size:var(--text-sm)}
 .hist-list{list-style:none;display:grid;gap:var(--space-2)}
 .hist-list li{max-width:none;display:flex;gap:var(--space-3);align-items:center;justify-content:space-between;flex-wrap:wrap;padding:var(--space-2) var(--space-3);border:1px solid var(--color-divider);border-radius:var(--radius-md)}
+
+.cell-picker{border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:var(--space-3)}
+.cell-picker legend{padding:0 var(--space-2);font-weight:600;font-size:var(--text-sm)}
+.cp-zones{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-3)}
+.cp-zones .btn[aria-pressed="true"]{background:var(--color-primary);color:var(--color-text-inverse)}
+.cp-scroll{overflow-x:auto;padding-bottom:var(--space-2)}
+.mini-grid{display:grid;grid-template-columns:repeat(var(--cols),minmax(44px,1fr));gap:3px;min-width:max-content}
+.mcell{--zc:var(--color-border);position:relative;min-height:44px;min-width:44px;font-size:var(--text-xs);font-weight:700;border-radius:var(--radius-sm);border:1px solid var(--color-divider);border-top:5px solid var(--zc);background:var(--color-surface-2);color:var(--color-text)}
+.mcell[aria-pressed="true"]{background:var(--color-primary);color:var(--color-text-inverse);border-color:var(--color-primary)}
+.mcell.occ::after{content:"";position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--color-warning)}
 </style>
 </head>
 <body>
@@ -253,8 +263,7 @@ button.plan-h:hover{background:var(--color-primary-highlight)}
   <a href="#/home" data-nav="home"><i data-lucide="layout-dashboard" width="24" height="24" aria-hidden="true"></i>Accueil</a>
   <a href="#/lexique" data-nav="lexique"><i data-lucide="book-open" width="24" height="24" aria-hidden="true"></i>Lexique</a>
   <a href="#/graines" data-nav="graines"><i data-lucide="wheat" width="24" height="24" aria-hidden="true"></i>Graines</a>
-  <a href="#/jardin" data-nav="jardin"><i data-lucide="map" width="24" height="24" aria-hidden="true"></i>Jardin</a>
-  <a href="#/plan" data-nav="plan"><i data-lucide="layout-grid" width="24" height="24" aria-hidden="true"></i>Plan</a>
+  <a href="#/plan" data-nav="plan"><i data-lucide="map" width="24" height="24" aria-hidden="true"></i>Plan</a>
   <a href="#/data" data-nav="data"><i data-lucide="database" width="24" height="24" aria-hidden="true"></i>Données</a>
 </nav>
 
@@ -291,7 +300,6 @@ const STEPS = [
 const FAMILIES = ['Solanacées','Cucurbitacées','Fabacées','Apiacées','Astéracées','Brassicacées','Alliacées','Amaranthacées','Poacées','Rosacées','Lamiacées','Autre'];
 const ROTATION_YEARS = 3;
 const SUN = ['Plein soleil','Mi-ombre','Ombre'];
-const BED_TYPES = ['Carré','Serre','Butte','Bac / pot','Rang en pleine terre','Verger'];
 const SPECIES_FAMILY = {
   tomate:'Solanacées', aubergine:'Solanacées', poivron:'Solanacées', piment:'Solanacées', 'pomme de terre':'Solanacées',
   courgette:'Cucurbitacées', concombre:'Cucurbitacées', potiron:'Cucurbitacées', courge:'Cucurbitacées', melon:'Cucurbitacées', pasteque:'Cucurbitacées',
@@ -431,12 +439,6 @@ function mergeStates(L, R){
 ===================================================================== */
 function seed(){
   const Y = new Date().getFullYear();
-  const beds = [
-    {id:'b1',name:'Carré A',type:'Carré',area:4,notes:'Plein sud, sol riche en compost.'},
-    {id:'b2',name:'Carré B',type:'Carré',area:4,notes:'Sol plus lourd, drainage à surveiller.'},
-    {id:'b3',name:'Serre tunnel',type:'Serre',area:6,notes:'Culture sous abri, tomates et aubergines.'},
-    {id:'b4',name:'Butte lasagne',type:'Butte',area:3,notes:'Créée à l\u2019automne, paillée.'}
-  ];
   const plants = [
     {id:'p1',species:'Tomate',variety:'Red Zebra',family:'Solanacées',sun:'Plein soleil',notes:'Fruits rouges striés de jaune. Tuteurage haut, éliminer les gourmands. Semis sous abri en mars.'},
     {id:'p2',species:'Tomate',variety:'Noire de Crimée',family:'Solanacées',sun:'Plein soleil',notes:'Grosse tomate brun-pourpre, très savoureuse. Sensible au mildiou : aérer et pailler.'},
@@ -447,7 +449,7 @@ function seed(){
     {id:'p7',species:'Laitue',variety:'Batavia Reine des Glaces',family:'Astéracées',sun:'Mi-ombre',notes:'Résiste à la chaleur. Semis échelonnés toutes les 3 semaines.'},
     {id:'p8',species:'Poireau',variety:'Bleu de Solaize',family:'Alliacées',sun:'Plein soleil',notes:'Variété rustique d\u2019hiver. Repiquer en juillet, butter en cours de culture.'}
   ];
-  const c = (id,plantId,year,bedId,qty,kg,dates) => ({id,plantId,year,bedId,qty,harvestKg:kg,dates});
+  const c = (id,plantId,year,_bed,qty,kg,dates) => ({id,plantId,year,cellIds:[],qty,harvestKg:kg,dates});
   const cultures = [
     c('c1','p2',Y-2,'b1',4,16,{semis:`${Y-2}-03-10`,rempotage:`${Y-2}-04-08`,plantation:`${Y-2}-05-14`,recolte1:`${Y-2}-07-22`,recolte2:`${Y-2}-09-30`,graines:`${Y-2}-09-20`}),
     c('c2','p4',Y-2,'b2',3,22,{semis:`${Y-2}-04-20`,plantation:`${Y-2}-05-18`,recolte1:`${Y-2}-06-30`,recolte2:`${Y-2}-09-25`}),
@@ -472,12 +474,17 @@ function seed(){
     {id:'s4',plantId:'p6',species:'Carotte',variety:'Nantaise 2',vintage:Y-3,origin:'achat',supplier:'Sachet acheté (exemple)',cultureId:'',qty:1,unit:'sachet(s)',location:'Boîte à graines',lifeYears:'',germDate:'',germPct:'',notes:'',empty:false},
     {id:'s5',plantId:'p7',species:'Laitue',variety:'Batavia Reine des Glaces',vintage:Y-4,origin:'achat',supplier:'',cultureId:'',qty:'',unit:'graines',location:'',lifeYears:'',germDate:'',germPct:'',notes:'',empty:false}
   ];
-  const zones = [ {id:'z1',name:'Planche tomates',color:'#b45309',note:''}, {id:'z2',name:'Légumes racines',color:'#437a22',note:''} ];
-  const zy = {}; zy[Y] = 'z1'; const zy2 = {}; zy2[Y] = 'z2';
-  const cells = [ {id:'q-0-0',col:0,row:0,name:'Tomates sud',zones:zy,note:''}, {id:'q-1-0',col:1,row:0,name:'',zones:zy,note:''}, {id:'q-0-1',col:0,row:1,name:'',zones:zy2,note:''} ];
-  cultures.find(x => x.id==='c6').cellIds = ['q-0-1'];
-  cultures.find(x => x.id==='c7').cellIds = ['q-0-0','q-1-0'];
-  const s = { plants, cultures, beds, entries, photos:[], seeds, gardens:[], zones, cells, tombstones:{} };
+  const zones = [ {id:'z1',name:'Planche tomates',color:'#b45309',note:''}, {id:'z2',name:'Potager bas',color:'#437a22',note:''} ];
+  const zoneMap = {}; // code carré -> { année: zone }
+  const setZ = (ids, yr, z) => ids.forEach(id => { (zoneMap[id] = zoneMap[id] || {})[yr] = z; });
+  setZ(['q-4-0','q-5-0','q-4-1','q-5-1'], Y, 'z1'); setZ(['q-2-0','q-3-0'], Y-1, 'z1');
+  setZ(['q-0-0','q-1-0','q-0-1','q-0-2','q-1-2'], Y, 'z2'); setZ(['q-0-0','q-1-0'], Y-1, 'z2');
+  const cells = Object.keys(zoneMap).map(id => { const p = id.split('-'); return { id, col:+p[1], row:+p[2], name:'', zones:zoneMap[id], note:'' }; });
+  cells.find(x => x.id==='q-4-0').name = 'Tomates sud';
+  const place = (cid, ids) => { cultures.find(x => x.id===cid).cellIds = ids; };
+  place('c1',['q-0-0']); place('c2',['q-1-0']); place('c3',['q-0-0']); place('c4',['q-1-0']); place('c5',['q-2-0','q-3-0']);
+  place('c6',['q-0-1']); place('c7',['q-4-0','q-5-0']); place('c8',['q-4-1','q-5-1']); place('c9',['q-0-2']); place('c10',['q-1-2']);
+  const s = { plants, cultures, beds:[], entries, photos:[], seeds, gardens:[], zones, cells, tombstones:{} };
   COLLECTIONS.forEach(k => s[k].forEach(x => { x.updatedAt = SEED_TS; }));
   return s;
 }
@@ -485,18 +492,6 @@ function seed(){
 /* =====================================================================
    Rotation logic
 ===================================================================== */
-function rotConflicts(bedId, year, family, excludeId){
-  if (!bedId || !family || family==='Autre') return [];
-  return state.cultures.filter(c => c.bedId===bedId && c.id!==excludeId && famOfPlant(c.plantId)===family
-    && Math.abs(c.year-year)>=1 && Math.abs(c.year-year)<=ROTATION_YEARS);
-}
-function bedAvoid(bedId, year){
-  const set = new Set();
-  state.cultures.filter(c => c.bedId===bedId && year-c.year>=1 && year-c.year<=ROTATION_YEARS)
-    .forEach(c => { const f = famOfPlant(c.plantId); if (f && f!=='Autre') set.add(f); });
-  return [...set];
-}
-
 /* =====================================================================
    Theme, toast, modal, backup bar
 ===================================================================== */
@@ -562,7 +557,7 @@ function vHome(){
     <div class="grid-2">
       <section class="card" aria-labelledby="h-up">
         <h2 id="h-up" style="font-size:var(--text-lg);margin-bottom:var(--space-3)">À venir · 30 jours</h2>
-        ${up.length ? `<ul class="list">${up.map(u => `<li><a class="row" href="#/plant/${u.c.plantId}">${ico(u.s.icon,20)}<span class="grow"><strong>${esc(u.s.label)} · ${esc(label(byId(state.plants,u.c.plantId)))}</strong><span class="muted">${fmtDate(u.d)}${u.c.bedId ? ' · '+esc((byId(state.beds,u.c.bedId)||{}).name||'') : ''}</span></span>${ico('chevron-right',18)}</a></li>`).join('')}</ul>`
+        ${up.length ? `<ul class="list">${up.map(u => `<li><a class="row" href="#/plant/${u.c.plantId}">${ico(u.s.icon,20)}<span class="grow"><strong>${esc(u.s.label)} · ${esc(label(byId(state.plants,u.c.plantId)))}</strong><span class="muted">${fmtDate(u.d)}${(u.c.cellIds && u.c.cellIds.length) ? ' · '+esc(cellsTxt(u.c)) : ''}</span></span>${ico('chevron-right',18)}</a></li>`).join('')}</ul>`
         : `<div class="empty"><h3>Rien de prévu</h3><p>Aucune étape datée dans les 30 prochains jours. Ajoutez des dates dans vos cultures pour les voir ici.</p></div>`}
       </section>
       <section class="card" aria-labelledby="h-ch">
@@ -602,17 +597,17 @@ function vLex(){
 }
 
 function cultureCard(c){
-  const bed = byId(state.beds,c.bedId), t = today(), fam = famOfPlant(c.plantId);
-  const conf = rotConflicts(c.bedId,c.year,fam,c.id);
+  const t = today(), fam = famOfPlant(c.plantId), cidx = cultureIndex();
+  const confCells = (c.cellIds || []).map(id => ({ id, cf:cellConflicts(cidx, id, c) })).filter(x => x.cf.length);
   return `<article class="card" style="margin-bottom:var(--space-4)" aria-label="Culture ${c.year}">
     <div class="culture-head">
       <div><h3 style="font-size:var(--text-lg)">Saison ${c.year}</h3>
-        <p class="muted" style="font-size:var(--text-sm)">${bed ? esc(bed.name) : (c.cellIds && c.cellIds.length ? '' : 'Emplacement non défini')}${c.cellIds && c.cellIds.length ? (bed ? ' · ' : '') + esc(cellsTxt(c)) : ''}${c.qty!==''&&c.qty!=null?` · ${c.qty} plant${c.qty>1?'s':''}`:''}${c.harvestKg?` · ${c.harvestKg} kg récoltés`:''}</p></div>
+        <p class="muted" style="font-size:var(--text-sm)">${(c.cellIds && c.cellIds.length) ? esc(cellsTxt(c)) : 'Non placée sur le plan'}${c.qty!==''&&c.qty!=null?` · ${c.qty} plant${c.qty>1?'s':''}`:''}${c.harvestKg?` · ${c.harvestKg} kg récoltés`:''}</p></div>
       <div style="display:flex;gap:var(--space-2)">
         <button class="btn btn-secondary btn-icon" data-act="edit-culture" data-id="${c.id}" aria-label="Modifier la culture ${c.year}">${ico('pencil',18)}</button>
         <button class="btn btn-ghost btn-icon" data-act="del-culture" data-id="${c.id}" aria-label="Supprimer la culture ${c.year}">${ico('trash-2',18)}</button></div>
     </div>
-    ${conf.length ? `<div class="alert" style="margin-top:var(--space-3);margin-bottom:0" role="alert">${ico('triangle-alert',18)}<span>Rotation : des ${esc(fam)} ont déjà été cultivées ici en ${[...new Set(conf.map(x => x.year))].join(', ')}.</span></div>` : ''}
+    ${confCells.length ? `<div class="alert" style="margin-top:var(--space-3);margin-bottom:0" role="alert">${ico('triangle-alert',18)}<span>Rotation : des ${esc(fam)} ont déjà été cultivées sur ${confCells.map(x => esc(codeOf(x.id)) + ' (' + [...new Set(x.cf.map(o => o.year))].join(', ') + ')').join(', ')}. Délai conseillé : ${ROTATION_YEARS + 1} ans.</span></div>` : ''}
     <ul class="steps">${STEPS.map(s => { const d = c.dates && c.dates[s.key];
       return `<li>${ico(s.icon,20)}<span class="label-s">${s.label}</span>${d ? `<span>${fmtDate(d)}</span><span class="badge ${d>t?'':'badge-ok'}">${d>t?'Prévu':'Fait'}</span>` : `<span class="none">—</span>`}</li>`; }).join('')}</ul>
     ${c.dates && c.dates.graines ? `<div style="margin-top:var(--space-3)"><button class="btn btn-secondary" data-act="seed-from-culture" data-id="${c.id}">${ico('wheat',18)} Créer un lot de graines</button></div>` : ''}
@@ -647,7 +642,7 @@ function vPlant(r){
     </div>
     ${sibs.length ? `<h2 class="section-title">Autres variétés · ${esc(p.species)}</h2><div class="gallery">${sibs.map(s => `<a class="chip" href="#/plant/${s.id}">${esc(s.variety)}</a>`).join('')}</div>` : ''}
     <h2 class="section-title">Cultures et étapes <button class="btn btn-primary" data-act="add-culture" data-plant="${p.id}">${ico('plus',18)} Ajouter une saison</button></h2>
-    ${cults.length ? cults.map(cultureCard).join('') : `<div class="empty"><h3>Aucune culture enregistrée</h3><p>Ajoutez une saison pour suivre semis, plantation, récoltes et graines, et l\u2019affecter à un emplacement.</p></div>`}
+    ${cults.length ? cults.map(cultureCard).join('') : `<div class="empty"><h3>Aucune culture enregistrée</h3><p>Ajoutez une saison pour suivre semis, plantation, récoltes et graines, et la placer sur le plan du jardin.</p></div>`}
     <h2 class="section-title">Photos</h2>
     ${photoIds.length ? `<div class="gallery">${photoIds.map(id => `<button data-act="view-photo" data-ref="${id}" aria-label="Agrandir la photo"><img src="${photoSrc(id)}" alt="Photo de ${esc(label(p))}" width="84" height="84" loading="lazy"></button>`).join('')}</div>` : `<p class="muted">Pas encore de photo. Ajoutez-en une dans le journal ci-dessous.</p>`}
     <h2 class="section-title">Journal</h2>
@@ -673,38 +668,6 @@ function vPlant(r){
   </div>`;
 }
 
-function bedCard(b){
-  const Y = new Date().getFullYear();
-  const cs = state.cultures.filter(c => c.bedId===b.id);
-  const minY = Math.min(Y-2, ...cs.map(c => c.year)), maxY = Y+1;
-  const rows = []; for (let y=maxY; y>=minY; y--) rows.push(y);
-  const avoid = bedAvoid(b.id, Y+1);
-  const ok = FAMILIES.filter(f => f!=='Autre' && !avoid.includes(f)).slice(0,5);
-  const bs = photoSrc(b.photo);
-  return `<article class="card" aria-label="${esc(b.name)}">
-    <div class="culture-head">
-      <div class="bed-title">${bs ? `<button data-act="view-photo" data-ref="${b.photo}" aria-label="Agrandir la photo de ${esc(b.name)}"><img class="thumb" src="${bs}" alt="Photo de ${esc(b.name)}" width="52" height="52" loading="lazy"></button>` : ''}
-        <div><h2 style="font-size:var(--text-lg)">${esc(b.name)}</h2><p class="muted" style="font-size:var(--text-sm)">${esc(b.type)}${b.area?` · ${b.area} m²`:''}</p></div></div>
-      <div style="display:flex;gap:var(--space-2)">
-        <button class="btn btn-secondary btn-icon" data-act="edit-bed" data-id="${b.id}" aria-label="Modifier ${esc(b.name)}">${ico('pencil',18)}</button>
-        <button class="btn btn-ghost btn-icon" data-act="del-bed" data-id="${b.id}" aria-label="Supprimer ${esc(b.name)}">${ico('trash-2',18)}</button></div>
-    </div>
-    ${b.notes ? `<p class="muted" style="margin:var(--space-2) 0 var(--space-3)">${esc(b.notes)}</p>` : ''}
-    <div style="margin-top:var(--space-3)">${rows.map(y => {
-      const cy = cs.filter(c => c.year===y);
-      return `<div class="year-row"><span class="y">${y}</span><div class="cells">${cy.length ? cy.map(c => { const p = byId(state.plants,c.plantId); const f = p&&p.family; const w = rotConflicts(b.id,y,f,c.id).length>0;
-        return `<a class="chip ${w?'warn':''}" style="--h:${hue(f)}" href="#/plant/${c.plantId}">${esc(label(p))}${w?ico('triangle-alert',14):''}</a>`; }).join('') : `<span class="muted" style="font-size:var(--text-sm)">${y>Y?'À planifier':'Libre'}</span>`}</div>
-        <button class="btn btn-ghost btn-icon" data-act="add-culture" data-bed="${b.id}" data-year="${y}" aria-label="Ajouter une culture en ${y} dans ${esc(b.name)}">${ico('plus',18)}</button></div>`; }).join('')}</div>
-    <div class="alert ${avoid.length?'':'ok'}" style="margin:var(--space-4) 0 0">${ico('lightbulb',18)}<span><strong>${Y+1} :</strong> ${avoid.length ? `éviter ${esc(avoid.join(', '))}. ` : 'aucune contrainte. '}Familles possibles : ${esc(ok.join(', '))}.</span></div>
-  </article>`;
-}
-function vGarden(){
-  return `<div class="main-inner">
-    <div class="page-header"><div><h1 class="page-title">Jardin et rotation</h1><p class="page-sub">Historique par emplacement. Règle appliquée : pas de retour de la même famille avant ${ROTATION_YEARS + 1} ans.</p></div>
-      <button class="btn btn-primary" data-act="add-bed">${ico('plus',18)} Nouvel emplacement</button></div>
-    ${state.beds.length ? `<div class="bed-grid">${state.beds.map(bedCard).join('')}</div>` : `<div class="empty"><h3>Aucun emplacement</h3><p>Créez vos carrés, buttes ou serres pour suivre ce qui y pousse année après année.</p><button class="btn btn-primary" data-act="add-bed">${ico('plus',18)} Nouvel emplacement</button></div>`}
-  </div>`;
-}
 function vData(){
   return `<div class="main-inner">
     <div class="page-header"><div><h1 class="page-title">Données</h1><p class="page-sub">Un seul fichier d\u2019application, des sauvegardes explicites.</p></div></div>
@@ -720,12 +683,12 @@ function vData(){
           <button class="btn btn-secondary" data-act="reset-sample">${ico('rotate-ccw',18)} Données d\u2019exemple</button>
           <button class="btn btn-danger" data-act="clear-all">${ico('trash-2',18)} Tout effacer</button></div></section>
     </div>
-    <section class="card" style="margin-top:var(--space-4)"><h2 style="font-size:var(--text-lg);margin-bottom:var(--space-3)">Utiliser le même fichier sur PC et Android</h2>
+    <section class="card" style="margin-top:var(--space-4)"><h2 style="font-size:var(--text-lg);margin-bottom:var(--space-3)">Utiliser l’application sur PC et Android</h2>
       <ol class="steps-guide">
-        <li>Gardez <strong>potager-nexus.html</strong> dans un dossier OneDrive. Sur PC, ouvrez-le avec Chrome ou Edge depuis le dossier synchronisé.</li>
-        <li>Sur Android, téléchargez le fichier depuis OneDrive (« Rendre disponible hors connexion » ou « Télécharger »), puis ouvrez-le avec Chrome. Chrome n\u2019y lit que le dossier Téléchargements.</li>
-        <li>Chaque appareil garde ses données dans son propre navigateur : elles voyagent uniquement par les fichiers de sauvegarde.</li>
+        <li>Ouvrez l’application depuis son adresse web (GitHub Pages) dans Chrome, sur le PC comme sur Android.</li>
+        <li>Chaque appareil garde ses données dans son propre navigateur : elles voyagent uniquement par les fichiers de sauvegarde (ZIP ou JSON), par exemple déposés dans OneDrive.</li>
         <li>Avant de travailler : restaurez la dernière sauvegarde (Fusionner). Après : sauvegardez, puis déposez le fichier dans OneDrive.</li>
+        <li>Le bouton Annuler (flèche en haut à droite) ou Ctrl+Z revient en arrière sur les dernières modifications de la session.</li>
       </ol></section>
   </div>`;
 }
@@ -733,7 +696,7 @@ function vData(){
 /* =====================================================================
    Event wiring: photos, inputs
 ===================================================================== */
-const pend = { plant:null, entry:null, bed:null };
+const pend = { plant:null, entry:null };
 let pendingLexQ = '', pendingImport = null;
 document.addEventListener('change', async e => {
   const t = e.target;
@@ -745,7 +708,7 @@ document.addEventListener('change', async e => {
     } catch(err){ if (prev) { prev.innerHTML = `<p class="err">${ico('circle-alert',16)} ${esc(err.message)}</p>`; refreshIcons(); } }
   }
   if (t.id === 'f-species') { const fam = $('#f-family'); if (fam && !fam.dataset.touched) fam.value = famGuess(t.value) || fam.value; }
-  if (t.closest('form[data-form=culture]') && ['c-plant','c-bed','c-year'].includes(t.id)) updateRotWarn();
+  if (t.closest('form[data-form=culture]') && ['c-plant','c-year'].includes(t.id)) { if (t.id === 'c-year') refreshPicker(); else updateRotWarn(); }
   if (t.id === 'dev-name') { state.meta.deviceName = t.value.trim() || guessDevice(); persist(false); }
   if (t.id === 'restore-file') { const f = t.files[0]; t.value = ''; handleRestoreFile(f); }
 });
@@ -790,8 +753,12 @@ function cultureForm(c={}){
     <div class="field"><label for="c-plant">Fiche *</label><select class="input" id="c-plant" name="plantId"><option value="">— Choisir —</option>${sortedPlants().map(p => `<option value="${p.id}" ${p.id===c.plantId?'selected':''}>${esc(label(p))}</option>`).join('')}</select><p class="err pwa-hide" data-err="plantId">${ico('circle-alert',16)} Choisissez une fiche.</p></div>
     <div class="form-row">
       <div class="field"><label for="c-year">Année *</label><input class="input" id="c-year" name="year" type="number" min="2000" max="2100" value="${c.year||new Date().getFullYear()}"><p class="err pwa-hide" data-err="year">${ico('circle-alert',16)} Année invalide.</p></div>
-      <div class="field"><label for="c-bed">Emplacement</label><select class="input" id="c-bed" name="bedId"><option value="">— Aucun —</option>${state.beds.map(b => `<option value="${b.id}" ${b.id===c.bedId?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div>
+      <div class="field"><span class="muted" style="font-size:var(--text-sm)">Les zones et carrés se choisissent plus bas.</span></div>
     </div>
+    <fieldset class="field cell-picker"><legend>Emplacement sur le plan (carrés ou zones)</legend>
+      <div id="cp-box">${pickerHtml(c.year || new Date().getFullYear(), new Set(c.cellIds || []), c.id)}</div>
+      <input type="hidden" name="cellIds" id="c-cells" value="${esc((c.cellIds || []).join(','))}">
+    </fieldset>
     <div id="rot-warn" aria-live="polite"></div>
     <div class="form-row">${STEPS.map(s => `<div class="field"><label for="c-${s.key}">${s.label}</label><input class="input" id="c-${s.key}" name="${s.key}" type="date" value="${esc(d[s.key]||'')}"></div>`).join('')}</div>
     <div class="form-row">
@@ -805,30 +772,16 @@ function cultureForm(c={}){
 function updateRotWarn(){
   const box = $('#rot-warn'); if (!box) return;
   const f = $('form[data-form=culture]'); if (!f) return;
-  const plantId = $('#c-plant').value, bedId = $('#c-bed').value, year = +$('#c-year').value;
-  if (!plantId || !bedId || !year) { box.innerHTML = ''; return; }
+  const plantId = $('#c-plant').value, year = +$('#c-year').value, ids = [...pickerSel()];
+  if (!plantId || !year || !ids.length) { box.innerHTML = ''; return; }
   const fam = famOfPlant(plantId);
-  const conf = rotConflicts(bedId, year, fam, f.dataset.id);
-  box.innerHTML = conf.length
-    ? `<div class="alert" role="alert">${ico('triangle-alert',18)}<span>Rotation : des ${esc(fam)} ont été cultivées ici en ${[...new Set(conf.map(x => x.year))].join(', ')} (${esc(conf.map(x => label(byId(state.plants,x.plantId))).join(', '))}). Délai conseillé : ${ROTATION_YEARS + 1} ans.</span></div>`
-    : `<div class="alert ok">${ico('circle-check',18)}<span>Rotation respectée pour cet emplacement.</span></div>`;
+  if (!fam || fam === 'Autre') { box.innerHTML = `<div class="alert">${ico('info',18)}<span>Renseignez la famille botanique de la fiche pour contrôler la rotation.</span></div>`; refreshIcons(); return; }
+  const idx = cultureIndex(), pseudo = { id:f.dataset.id || '__new', plantId, year };
+  const bad = ids.map(id => ({ id, cf:cellConflicts(idx, id, pseudo) })).filter(x => x.cf.length);
+  box.innerHTML = bad.length
+    ? `<div class="alert" role="alert">${ico('triangle-alert',18)}<span>Rotation : des ${esc(fam)} ont été cultivées sur ${bad.map(x => esc(codeOf(x.id)) + ' (' + [...new Set(x.cf.map(o => o.year))].join(', ') + ')').join(', ')}. Délai conseillé : ${ROTATION_YEARS + 1} ans.</span></div>`
+    : `<div class="alert ok">${ico('circle-check',18)}<span>Rotation respectée pour ${plural(ids.length,'carré')}.</span></div>`;
   refreshIcons();
-}
-function bedForm(b={}){
-  pend.bed = null;
-  const cur = photoSrc(b.photo);
-  return `<form data-form="bed" data-id="${b.id||''}" novalidate>
-    <h2 id="modal-title">${b.id ? 'Modifier l\u2019emplacement' : 'Nouvel emplacement'}</h2>
-    <div class="field"><label for="b-name">Nom *</label><input class="input" id="b-name" name="name" value="${esc(b.name)}" placeholder="Parcelle nord"><p class="err pwa-hide" data-err="name">${ico('circle-alert',16)} Indiquez un nom.</p></div>
-    <div class="form-row">
-      <div class="field"><label for="b-type">Type</label><select class="input" id="b-type" name="type">${BED_TYPES.map(t => opt(t,b.type||'Carré')).join('')}</select></div>
-      <div class="field"><label for="b-area">Surface (m²)</label><input class="input" id="b-area" name="area" type="number" min="0" step="0.5" value="${b.area??''}"></div>
-    </div>
-    <div class="field"><label for="b-notes">Notes (sol, exposition, arrosage)</label><textarea class="input" id="b-notes" name="notes">${esc(b.notes)}</textarea></div>
-    <div class="field"><label for="b-photo">Photo de l\u2019emplacement</label><input class="input" id="b-photo" type="file" accept="image/*" data-photo="bed">
-      <div id="prev-bed">${cur?`<img src="${cur}" alt="Photo actuelle" width="120" height="120" style="width:120px;height:120px;object-fit:cover;border-radius:8px">`:''}</div></div>
-    <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div>
-  </form>`;
 }
 const showErr = (form, key, on) => { const e = form.querySelector(`[data-err="${key}"]`); if (e) e.classList.toggle('pwa-hide', !on); };
 
@@ -847,17 +800,9 @@ const handlers = {
     const yOk = year>=2000 && year<=2100;
     showErr(f,'plantId',!fd.plantId); showErr(f,'year',!yOk); if (!fd.plantId || !yOk) return;
     const dates = {}; STEPS.forEach(s => { if (fd[s.key]) dates[s.key] = fd[s.key]; });
-    const data = { plantId:fd.plantId, year, bedId:fd.bedId||'', dates, qty:fd.qty===''?'':+fd.qty, harvestKg:fd.harvestKg===''?'':+fd.harvestKg, note:fd.note.trim() };
+    const data = { plantId:fd.plantId, year, cellIds:(fd.cellIds || '').split(',').filter(Boolean), dates, qty:fd.qty===''?'':+fd.qty, harvestKg:fd.harvestKg===''?'':+fd.harvestKg, note:fd.note.trim() };
     if (f.dataset.id) touch(Object.assign(byId(state.cultures,f.dataset.id), data)); else state.cultures.push(touch({ id:uid(), ...data }));
     persist(); closeModal(); toast('Culture enregistrée'); render();
-  },
-  bed(f){
-    const fd = Object.fromEntries(new FormData(f)); const name = fd.name.trim(); showErr(f,'name',!name); if (!name) return;
-    const data = { name, type:fd.type, area:fd.area===''?'':+fd.area, notes:fd.notes.trim() };
-    let b = f.dataset.id ? byId(state.beds,f.dataset.id) : null;
-    if (b) Object.assign(b, data); else { b = { id:uid(), ...data, photo:null }; state.beds.push(b); }
-    if (pend.bed) { removePhoto(b.photo); b.photo = addPhoto(pend.bed, 'emplacement', name); pend.bed = null; }
-    touch(b); persist(); closeModal(); toast('Emplacement enregistré'); render();
   },
   entry(f){
     const fd = Object.fromEntries(new FormData(f)); const text = fd.text.trim();
@@ -1051,15 +996,9 @@ const actions = {
     confirmBox(`Supprimer « ${label(p)} », ses cultures et son journal ?`, () => {
       removeItems('cultures', c => c.plantId===p.id); removeItems('entries', e => e.plantId===p.id); removeItems('plants', x => x.id===p.id);
       persist(); toast('Fiche supprimée'); go('#/lexique'); }); },
-  'add-culture': el => { openModal(cultureForm({ plantId:el.dataset.plant||'', bedId:el.dataset.bed||'', year:el.dataset.year ? +el.dataset.year : undefined })); updateRotWarn(); },
+  'add-culture': el => { openModal(cultureForm({ plantId:el.dataset.plant||'', year:el.dataset.year ? +el.dataset.year : undefined })); updateRotWarn(); },
   'edit-culture': el => { openModal(cultureForm(byId(state.cultures, el.dataset.id))); updateRotWarn(); },
   'del-culture': el => confirmBox('Supprimer cette saison de culture ?', () => { removeItems('cultures', c => c.id===el.dataset.id); persist(); toast('Culture supprimée'); render(); }),
-  'add-bed': () => openModal(bedForm()),
-  'edit-bed': el => openModal(bedForm(byId(state.beds, el.dataset.id))),
-  'del-bed': el => { const b = byId(state.beds, el.dataset.id);
-    confirmBox(`Supprimer l\u2019emplacement « ${b.name} » ? Les cultures liées seront conservées sans emplacement.`, () => {
-      state.cultures.forEach(c => { if (c.bedId===b.id) { c.bedId = ''; touch(c); } });
-      removeItems('beds', x => x.id===b.id); persist(); toast('Emplacement supprimé'); render(); }); },
   'del-entry': el => confirmBox('Supprimer cette note ?', () => { removeItems('entries', x => x.id===el.dataset.id); persist(); toast('Note supprimée'); render(); }),
   'view-photo': el => { const ph = photoOf(el.dataset.ref); if (!ph) return;
     $('#lightbox-img').src = ph.full || ph.thumb;
@@ -1517,7 +1456,7 @@ function plantOnCells(val, ids, Y){
   if (!val) return false;
   const kind = val.slice(0,1), ref = val.slice(2);
   if (kind === 'c') { const c = byId(state.cultures, ref); if (!c) return false; c.cellIds = [...new Set([...(c.cellIds || []), ...ids])]; touch(c); }
-  else { if (!byId(state.plants, ref)) return false; state.cultures.push(touch({ id:uid(), plantId:ref, year:Y, bedId:'', cellIds:[...ids], dates:{}, qty:'', harvestKg:'', note:'' })); }
+  else { if (!byId(state.plants, ref)) return false; state.cultures.push(touch({ id:uid(), plantId:ref, year:Y, cellIds:[...ids], dates:{}, qty:'', harvestKg:'', note:'' })); }
   return true;
 }
 const cellsTxt = c => (c.cellIds && c.cellIds.length) ? `${c.cellIds.length > 1 ? 'Carrés' : 'Carré'} ${c.cellIds.map(codeOf).join(', ')}` : '';
@@ -1557,7 +1496,7 @@ function vPlan(){
         <div class="field"><label for="ps-crop">Culture en ${Y}</label><select class="input" id="ps-crop">${cropOptions(Y)}</select></div>
         <button class="btn btn-primary" data-act="sel-plant">${ico('sprout',18)} Planter sur la sélection</button>
       </div>
-      <div class="sel-row"><button class="btn btn-secondary" data-act="sel-clear">${ico('x',18)} Tout désélectionner</button></div>
+      <div class="sel-row"><button class="btn btn-secondary" data-act="sel-new-culture">${ico('square-pen',18)} Culture détaillée sur la sélection…</button><button class="btn btn-secondary" data-act="sel-clear">${ico('x',18)} Tout désélectionner</button></div>
     </section>` : '';
   const legend = `<div class="legend" aria-label="Légende des zones">${state.zones.map(z => `<span><i class="sw" style="--zc:${esc(z.color)}"></i>${esc(z.name)} <span class="muted">(${zonesUsed.get(z.id)||0})</span></span>`).join('')}<span><i class="sw"></i>Sans zone</span></div>`;
   const urgent = seedActive().map(s => ({ s, st:seedStatus(s) })).filter(x => ['mid','warn','bad'].includes(x.st.lvl)).sort((a,b) => LVL_RANK[a.st.lvl]-LVL_RANK[b.st.lvl]).slice(0,6);
@@ -1618,6 +1557,7 @@ function cellModal(id){
       ${cf.length ? `<br><span style="color:var(--color-warning)">${ico('triangle-alert',14)} Même famille déjà cultivée ici en ${[...new Set(cf.map(x => x.year))].join(', ')}.</span>` : ''}</li>`; }).join('')}</ul>` : '<p class="muted">Carré libre cette saison.</p>'}
     <div class="sel-row"><div class="field"><label for="cm-crop">Ajouter une culture</label><select class="input" id="cm-crop">${cropOptions(Y)}</select></div>
       <button class="btn btn-primary" data-act="cell-add-crop">${ico('plus',18)} Ajouter</button></div>
+    <div class="sel-row"><button class="btn btn-secondary" data-act="cell-new-culture">${ico('square-pen',18)} Nouvelle culture détaillée ici (dates, quantités…)</button></div>
     ${issues.length ? `<h3>Voisinage</h3><ul class="sug-list">${issues.map(x => `<li style="color:${x.type==='bad' ? 'var(--color-warning)' : 'var(--color-success)'}">${ico(x.type==='bad' ? 'triangle-alert' : 'circle-check',14)} ${esc(x.text)}</li>`).join('')}</ul>` : ''}
     <h3>Suggestions pour ${Y}</h3>
     <ul class="sug-list">
@@ -1718,12 +1658,60 @@ Object.assign(actions, {
 document.addEventListener('input', e => { if (['gr-w','gr-l','gr-c'].includes(e.target.id)) gridCalc(); });
 document.addEventListener('change', e => {
   const t = e.target; if (!['cm-name','cm-zone','cm-note'].includes(t.id) || !planUI.cell) return;
-  const c = ensureCell(planUI.cell);
-  let msg = '';
-  if (t.id === 'cm-name') { c.name = t.value.trim(); msg = 'Carré renommé'; }
-  if (t.id === 'cm-zone') { if (t.value) c.zones[planUI.year] = t.value; else delete c.zones[planUI.year]; msg = 'Zone du carré modifiée'; }
-  if (t.id === 'cm-note') { c.note = t.value.trim(); msg = 'Note du carré enregistrée'; }
+  const cur = cellDoc(planUI.cell) || { name:'', note:'', zones:{} }, Y = planUI.year, v = t.value.trim();
+  if (t.id === 'cm-name' && v === (cur.name || '')) return;
+  if (t.id === 'cm-note' && v === (cur.note || '')) return;
+  if (t.id === 'cm-zone' && t.value === ((cur.zones || {})[Y] || '')) return;
+  const c = ensureCell(planUI.cell); let msg = '';
+  if (t.id === 'cm-name') { c.name = v; msg = 'Carré renommé'; }
+  if (t.id === 'cm-zone') { if (t.value) c.zones[Y] = t.value; else delete c.zones[Y]; msg = 'Zone du carré modifiée'; }
+  if (t.id === 'cm-note') { c.note = v; msg = 'Note du carré enregistrée'; }
   touch(c); persist(); toast(msg); render();
+});
+
+
+/* =====================================================================
+   Sélecteur de carrés / zones dans la fiche de culture
+===================================================================== */
+function pickerSel(){ const el = $('#c-cells'); return new Set(((el && el.value) || '').split(',').filter(Boolean)); }
+function setPickerSel(set){ const el = $('#c-cells'); if (el) el.value = [...set].join(','); }
+function zoneCells(zid, Y){
+  const cfg = gardenCfg(), out = [];
+  for (let r = 0; r < cfg.rows; r++) for (let c = 0; c < cfg.cols; c++) { const id = cellKey(c,r), cd = cellDoc(id); if (cd && cd.zones && cd.zones[Y] === zid) out.push(id); }
+  return out;
+}
+function pickerHtml(Y, sel, selfId){
+  const cfg = gardenCfg(), idx = cultureIndex();
+  const zbtn = state.zones.map(z => { const ids = zoneCells(z.id, Y), all = ids.length > 0 && ids.every(id => sel.has(id));
+    return `<button type="button" class="btn btn-secondary" data-act="cp-zone" data-zone="${z.id}" aria-pressed="${all}" ${ids.length ? '' : 'disabled'} title="${ids.length ? plural(ids.length,'carré') + ' en ' + Y : 'Aucun carré dans cette zone en ' + Y}"><i class="sw" style="--zc:${esc(z.color)}"></i> ${esc(z.name)} <span class="muted">(${ids.length})</span></button>`; }).join('');
+  let grid = '';
+  for (let r = 0; r < cfg.rows; r++) for (let c = 0; c < cfg.cols; c++) {
+    const id = cellKey(c,r), cd = cellDoc(id), z = zoneOf(cd, Y), on = sel.has(id);
+    const others = cellCrops(idx, id, Y).filter(cu => cu.id !== selfId);
+    const names = others.map(cu => (byId(state.plants,cu.plantId)||{}).species).filter(Boolean);
+    grid += `<button type="button" class="mcell ${others.length ? 'occ' : ''}" style="${z ? '--zc:' + esc(z.color) : ''}" data-act="cp-toggle" data-id="${id}" aria-pressed="${on}" aria-label="Carré ${cellCode(c,r)}${z ? ', zone ' + esc(z.name) : ''}${names.length ? ', déjà occupé par ' + esc(names.join(', ')) : ''}">${cellCode(c,r)}</button>`;
+  }
+  const hidden = [...sel].filter(id => { const p = parseCell(id); return !p || p.col >= cfg.cols || p.row >= cfg.rows; });
+  return `${state.zones.length ? `<div class="cp-zones" role="group" aria-label="Zones">${zbtn}</div>` : '<p class="hint">Aucune zone définie : créez-en dans le Plan pour sélectionner un groupe de carrés d’un clic.</p>'}
+    <div class="cp-scroll"><div class="mini-grid" style="--cols:${cfg.cols}" role="group" aria-label="Carrés du jardin">${grid}</div></div>
+    <p class="hint" style="margin-top:var(--space-2)">${sel.size ? `${plural(sel.size,'carré')} : ${esc([...sel].slice(0,14).map(codeOf).join(', '))}${sel.size > 14 ? '…' : ''}` : 'Aucun carré sélectionné.'} Un point orange signale un carré déjà occupé cette année.${hidden.length ? ` ${plural(hidden.length,'carré')} hors de la grille actuelle ${hidden.length > 1 ? 'sont conservés' : 'est conservé'}.` : ''}</p>
+    ${sel.size ? '<button type="button" class="btn btn-ghost" data-act="cp-clear">Tout désélectionner</button>' : ''}`;
+}
+function refreshPicker(){
+  const f = $('form[data-form=culture]'), box = $('#cp-box'); if (!f || !box) return;
+  const Y = +$('#c-year').value || new Date().getFullYear(), ae = document.activeElement;
+  const keep = ae && ae.dataset ? { act:ae.dataset.act, id:ae.dataset.id, zone:ae.dataset.zone } : null;
+  box.innerHTML = pickerHtml(Y, pickerSel(), f.dataset.id || '__new'); refreshIcons();
+  if (keep && keep.act) { const sel = keep.id ? `[data-act="${keep.act}"][data-id="${keep.id}"]` : keep.zone ? `[data-act="${keep.act}"][data-zone="${keep.zone}"]` : `[data-act="${keep.act}"]`; const el = box.querySelector(sel); if (el) el.focus(); }
+  updateRotWarn();
+}
+Object.assign(actions, {
+  'cp-toggle': el => { const s = pickerSel(); if (s.has(el.dataset.id)) s.delete(el.dataset.id); else s.add(el.dataset.id); setPickerSel(s); refreshPicker(); },
+  'cp-zone': el => { const Y = +$('#c-year').value || new Date().getFullYear(), ids = zoneCells(el.dataset.zone, Y), s = pickerSel();
+    if (ids.every(id => s.has(id))) ids.forEach(id => s.delete(id)); else ids.forEach(id => s.add(id)); setPickerSel(s); refreshPicker(); },
+  'cp-clear': () => { setPickerSel(new Set()); refreshPicker(); },
+  'cell-new-culture': () => { const id = planUI.cell; openModal(cultureForm({ year:planUI.year, cellIds:[id] })); updateRotWarn(); },
+  'sel-new-culture': () => { const ids = selectedIds(); if (!ids.length) return; openModal(cultureForm({ year:planUI.year, cellIds:ids })); updateRotWarn(); }
 });
 
 /* =====================================================================
@@ -1747,8 +1735,8 @@ function drawChart(){
 }
 function render(){
   const r = parseRoute();
-  document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav === (r.name==='plant' ? 'lexique' : r.name)) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
-  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vGarden, graines:vSeeds, plan:vPlan, data:vData };
+  document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav === (r.name==='plant' ? 'lexique' : r.name==='jardin' ? 'plan' : r.name)) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vPlan, graines:vSeeds, plan:vPlan, data:vData };
   const main = $('#view');
   try { main.innerHTML = (views[r.name] || vHome)(r); }
   catch(err){ main.innerHTML = `<div class="alert bad" role="alert">${ico('circle-alert',18)}<span>Erreur d\u2019affichage : ${esc(err.message)}. Sauvegardez vos données puis rechargez la page.</span></div>`; }

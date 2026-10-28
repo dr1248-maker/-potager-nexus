@@ -1,4 +1,4 @@
-const VERSION = 'potager-nexus-v4';
+const VERSION = 'potager-nexus-v5';
 
 const CORE = [
   './',
