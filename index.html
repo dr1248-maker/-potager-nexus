@@ -285,6 +285,28 @@ button.plan-h:hover{background:var(--color-primary-highlight)}
 .pd{--cc:var(--color-text);width:11px;height:11px;border-radius:50%;background:var(--cc);justify-self:center;align-self:center;border:2px solid var(--color-surface);box-shadow:0 0 0 1px var(--cc);position:relative;z-index:1}
 .pl-todo{list-style:none;display:grid;gap:var(--space-2);margin-top:var(--space-2)}
 .pl-todo li{max-width:none;font-size:var(--text-sm);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+
+.spec-card{margin-bottom:var(--space-4)}
+.spec-card .stats{margin:var(--space-3) 0}
+.spec-card .stat dd{font-size:var(--text-lg)}
+.spec-card .stat dd small{display:block;font-size:var(--text-xs);font-weight:400;color:var(--color-text-muted)}
+.spec-table td,.spec-table th{padding:6px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--color-divider);font-size:var(--text-sm)}
+.spec-wrap{overflow-x:auto}
+
+.help-i{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:var(--space-2);border-radius:50%;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-primary);font:700 var(--text-sm)/1 inherit;cursor:pointer;vertical-align:middle}
+.help-i:hover{background:var(--color-primary-highlight)}
+.help-i:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+.help-sec{margin-bottom:var(--space-3);padding:0}
+.help-sec summary{cursor:pointer;padding:var(--space-4);font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:var(--space-2);min-height:44px;align-items:center}
+.help-sec summary::-webkit-details-marker{display:none}
+.help-sec summary::after{content:"+";font-size:var(--text-lg);color:var(--color-primary)}
+.help-sec[open] summary::after{content:"\2212"}
+.help-body{padding:0 var(--space-4) var(--space-4);font-size:var(--text-sm)}
+.help-body p,.help-body ul,.help-body ol{margin-bottom:var(--space-2)}
+.help-body ul,.help-body ol{padding-left:var(--space-5)}
+.help-body li{margin-bottom:4px}
+.help-body kbd{border:1px solid var(--color-border);border-radius:4px;padding:0 5px;background:var(--color-surface-offset);font-size:var(--text-xs)}
+.tour-dots{color:var(--color-text-muted);font-size:var(--text-xs);margin-bottom:var(--space-2)}
 </style>
 </head>
 <body>
@@ -300,6 +322,7 @@ button.plan-h:hover{background:var(--color-primary-highlight)}
     <button class="btn btn-ghost btn-icon" id="btn-undo" data-act="undo" disabled aria-label="Rien à annuler" title="Rien à annuler"><i data-lucide="undo-2" width="20" height="20" aria-hidden="true"></i></button>
     <button class="btn btn-ghost btn-icon" id="btn-redo" data-act="redo" disabled aria-label="Rien à rétablir" title="Rien à rétablir"><i data-lucide="redo-2" width="20" height="20" aria-hidden="true"></i></button>
     <button class="btn btn-ghost btn-icon" id="btn-history" data-act="open-history" aria-label="Historique des modifications" title="Historique des modifications"><i data-lucide="history" width="20" height="20" aria-hidden="true"></i></button>
+    <button class="btn btn-ghost btn-icon" id="btn-help" data-act="goto-help" aria-label="Aide" title="Aide"><i data-lucide="circle-help" width="20" height="20" aria-hidden="true"></i></button>
     <button class="btn btn-ghost btn-icon" id="theme-toggle" aria-label="Basculer le thème"></button>
   </div>
 </header>
@@ -375,7 +398,7 @@ const nowISO = () => new Date().toISOString();
 const byId = (arr,id) => arr.find(x => x.id === id);
 const label = p => p ? `${p.species} ${p.variety}` : '—';
 const hue = fam => { let h=0; for (const c of String(fam||'x')) h=(h*31+c.charCodeAt(0))%360; return h; };
-const famGuess = sp => { const n = norm(sp); if (!n) return ''; if (SPECIES_FAMILY[n]) return SPECIES_FAMILY[n]; const k = Object.keys(SPECIES_FAMILY).find(k => n.startsWith(k) || (n.length>3 && k.startsWith(n))); return k ? SPECIES_FAMILY[k] : ''; };
+const famGuess = sp => { const n = norm(sp); if (!n) return ''; if (SPECIES_FAMILY[n]) return SPECIES_FAMILY[n]; const k = Object.keys(SPECIES_FAMILY).find(k => n.startsWith(k) || (n.length>3 && k.startsWith(n))); return k ? SPECIES_FAMILY[k] : specFamilyGuess(sp); };
 const slug = s => norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 const famOfPlant = id => (byId(state.plants,id)||{}).family || '';
 const touch = o => { o.updatedAt = nowISO(); return o; };
@@ -689,6 +712,7 @@ function vPlant(r){
       <div style="clear:both"></div>
     </div>
     ${sibs.length ? `<h2 class="section-title">Autres variétés · ${esc(p.species)}</h2><div class="gallery">${sibs.map(s => `<a class="chip" href="#/plant/${s.id}">${esc(s.variety)}</a>`).join('')}</div>` : ''}
+    ${specCardHtml(p)}
     ${calSectionHtml(p)}
     <h2 class="section-title">Cultures et étapes <button class="btn btn-primary" data-act="add-culture" data-plant="${p.id}">${ico('plus',18)} Ajouter une saison</button></h2>
     ${cults.length ? cults.map(cultureCard).join('') : `<div class="empty"><h3>Aucune culture enregistrée</h3><p>Ajoutez une saison pour suivre semis, plantation, récoltes et graines, et la placer sur le plan du jardin.</p></div>`}
@@ -786,7 +810,7 @@ function plantForm(p={}){
     </div>
     <datalist id="dl-species">${species.map(s => `<option value="${esc(s)}">`).join('')}</datalist>
     <div class="form-row">
-      <div class="field"><label for="f-family">Famille botanique</label><input class="input" id="f-family" name="family" list="dl-family" value="${esc(p.family)}" ${p.family?'data-touched="1"':''}><datalist id="dl-family">${FAMILIES.map(f => `<option value="${f}">`).join('')}</datalist><span class="hint">Sert au calcul de la rotation.</span></div>
+      <div class="field"><label for="f-family">Famille botanique</label><input class="input" id="f-family" name="family" list="dl-family" value="${esc(p.family)}" ${p.family?'data-touched="1"':''}><datalist id="dl-family">${[...FAMILIES.filter(f => f !== 'Autre'), ...FAMILY_EXTRA, 'Autre'].map(f => `<option value="${f}">`).join('')}</datalist><span class="hint">Sert au calcul de la rotation.</span></div>
       <div class="field"><label for="f-sun">Exposition</label><select class="input" id="f-sun" name="sun">${SUN.map(s => opt(s,p.sun||'Plein soleil')).join('')}</select></div>
     </div>
     <div class="field"><label for="f-notes">Description et conseils</label><textarea class="input" id="f-notes" name="notes">${esc(p.notes)}</textarea></div>
@@ -814,12 +838,14 @@ function cultureForm(c={}){
       <div class="field"><label for="c-qty">Nombre de plants</label><input class="input" id="c-qty" name="qty" type="number" min="0" value="${c.qty??''}"></div>
       <div class="field"><label for="c-kg">Récolte totale (kg)</label><input class="input" id="c-kg" name="harvestKg" type="number" min="0" step="0.1" value="${c.harvestKg??''}"></div>
     </div>
+    <p class="hint" id="c-dens" aria-live="polite"></p>
     <div class="field"><label for="c-note">Note de saison</label><textarea class="input" id="c-note" name="note">${esc(c.note)}</textarea></div>
     <div class="modal-actions"><button type="button" class="btn btn-secondary" data-act="close">Annuler</button><button class="btn btn-primary" type="submit">${ico('check',18)} Enregistrer</button></div>
   </form>`;
 }
 function updateRotWarn(){
   const box = $('#rot-warn'); if (!box) return;
+  updateDensity();
   const f = $('form[data-form=culture]'); if (!f) return;
   const plantId = $('#c-plant').value, year = +$('#c-year').value, ids = [...pickerSel()];
   if (!plantId || !year || !ids.length) { box.innerHTML = ''; return; }
@@ -1123,7 +1149,9 @@ function seedRef(sd){
   if (sd.lifeYears !== '' && sd.lifeYears != null && +sd.lifeYears > 0) return { years:+sd.lifeYears, name:'Durée personnalisée', custom:true };
   const n = nrm2(sd.species); if (!n) return null;
   const hit = SEED_INDEX.find(o => o.re.test(n));
-  return hit ? { years:hit.years, name:hit.name, custom:false } : null;
+  if (hit) return { years:hit.years, name:hit.name, custom:false };
+  const sp = specDbFor({ species:sd.species, variety:sd.variety || '' }), e = sp && sp.find(x => x.v);
+  return e ? { years:e.v, name:e.n, custom:false, table:true } : null;
 }
 function seedStatus(sd, Y=new Date().getFullYear()){
   const ref = seedRef(sd), age = Math.max(0, Y - (+sd.vintage || Y));
@@ -1227,7 +1255,7 @@ function vSeeds(){
       <label class="chk"><input type="checkbox" id="seed-out" ${seedUI.out?'checked':''}> Afficher les lots épuisés</label>
     </div>
     <div id="seed-list">${seedListHtml()}</div>
-    ${lifeTableHtml()}
+    ${lifeTableHtml()}${specTableHtml()}
   </div>`;
 }
 function seedForm(sd={}){
@@ -1278,7 +1306,8 @@ function germForm(sd){
 function updateSeedHint(){
   const h = $('#s-life-hint'); if (!h) return;
   const ref = seedRef({ species:$('#s-species').value, lifeYears:$('#s-life').value });
-  h.innerHTML = ref ? `${ico('info',16)} ${ref.custom ? 'Durée personnalisée' : 'Référence Pomologie (' + esc(ref.name) + ')'} : ${plural(ref.years,'an')}.`
+  const alt = (() => { const sp = specDbFor({ species:$('#s-species').value, variety:'' }), e = sp && sp.find(x => x.v); return e && ref && !ref.table && !ref.custom && e.v !== ref.years ? ` Table de référence : ${plural(e.v,'an')}.` : ''; })();
+  h.innerHTML = ref ? `${ico('info',16)} ${ref.custom ? 'Durée personnalisée' : ref.table ? 'Table de référence (' + esc(ref.name) + ')' : 'Référence Pomologie (' + esc(ref.name) + ')'} : ${plural(ref.years,'an')}.${alt}`
     : `${ico('circle-help',16)} Espèce absente de la liste : indiquez une durée personnalisée plus bas.`;
   refreshIcons();
 }
@@ -1794,12 +1823,18 @@ function calRefFor(p){
   const steps = {}; Object.entries(CREF_KEYS).forEach(([c,key]) => { steps[key] = hit.v[c] || []; });
   return { name:hit.v.n, kind:CAL_KIND[hit.v.k], steps };
 }
-const calDocsOf = pid => state.calendars.filter(d => d.plantId === pid).sort((a,b) => b.year - a.year);
-function calEffective(p, Y, exceptYear){
-  const ref = calRefFor(p), docs = calDocsOf(p.id).filter(d => d.year <= Y && d.year !== exceptYear), out = {};
+const calDocsOf = pid => state.calendars.filter(d => d.plantId === pid && d.scope !== 'species').sort((a,b) => b.year - a.year);
+const calSpKey = p => nrm2(p.species);
+const calSpeciesDocs = p => state.calendars.filter(d => d.scope === 'species' && d.speciesKey === calSpKey(p)).sort((a,b) => b.year - a.year);
+function calEffective(p, Y, exceptYear, exceptScope = 'plant'){
+  const ref = calRefFor(p), out = {};
+  const pd = calDocsOf(p.id).filter(d => d.year <= Y && !(exceptScope === 'plant' && d.year === exceptYear));
+  const sd = calSpeciesDocs(p).filter(d => d.year <= Y && !(exceptScope === 'species' && d.year === exceptYear));
   CSTEPS.forEach(s => {
-    const d = docs.find(d => d.steps && Array.isArray(d.steps[s.key]));
-    if (d) out[s.key] = { win:d.steps[s.key], src:'mine', year:d.year };
+    const has = d => d.steps && Array.isArray(d.steps[s.key]);
+    const a = pd.find(has), b = a ? null : sd.find(has);
+    if (a) out[s.key] = { win:a.steps[s.key], src:'mine', scope:'plant', year:a.year };
+    else if (b) out[s.key] = { win:b.steps[s.key], src:'mine', scope:'species', year:b.year };
     else if (ref && ref.steps[s.key] && ref.steps[s.key].length) out[s.key] = { win:ref.steps[s.key], src:'ref' };
     else out[s.key] = { win:[], src:'none' };
   });
@@ -1832,7 +1867,7 @@ function calSectionHtml(p){
   const shown = CSTEPS.filter(s => out[s.key].win.length || (ref && ref.steps[s.key] && ref.steps[s.key].length));
   const empty = CSTEPS.filter(s => !shown.includes(s));
   const blocks = shown.map(s => { const e = out[s.key], rw = ref ? ref.steps[s.key] || [] : [];
-    const badge = e.src === 'mine' ? `<span class="badge">Ajusté · ${e.year}</span>` : e.src === 'ref' ? '<span class="badge badge-ok">Préconisé</span>' : '';
+    const badge = e.src === 'mine' ? `<span class="badge">${e.scope === 'species' ? 'Espèce ' + esc(p.species) : 'Ajusté'} · ${e.year}</span>` : e.src === 'ref' ? '<span class="badge badge-ok">Préconisé</span>' : '';
     return `<div class="cal-step" style="--cc:var(--cal-${s.key})"><div class="cal-head"><span class="cal-dot"></span>${ico(s.icon,16)}<strong>${s.label}</strong>${badge}</div>
       ${ribbon('ref', rw, s.key, nowSlot)}${ribbon('mine', e.win, s.key, nowSlot)}
       <p class="cal-txt"><span>Préconisé : ${esc(fmtWins(rw))}.</span> <strong>Mon calendrier : ${esc(fmtWins(e.win))}.</strong></p></div>`; }).join('');
@@ -1849,10 +1884,16 @@ function calSectionHtml(p){
     <div class="cal-step" style="--cc:var(--cal-graines)"><div class="cal-head"><strong>Réalisé en ${Y}</strong></div>
       <div class="ribbon real" style="--cc:var(--cal-graines)" aria-hidden="true">${realRow}</div>
       <p class="cal-txt">${realTxt ? esc(realTxt) : 'Aucune date saisie dans vos cultures pour cette année.'}</p></div>
-    <div class="sel-row"><button class="btn btn-primary" data-act="cal-edit">${ico('pencil',18)} Ajuster les périodes en ${Y}</button></div>
-    ${docs.length ? `<h3 style="margin-top:var(--space-4)">Historique de mes ajustements</h3><ul class="cal-hist">${docs.map(d => `<li><span><strong>${d.year}</strong> · ${CSTEPS.filter(s => d.steps && Array.isArray(d.steps[s.key])).map(s => `${s.label} : ${esc(fmtWins(d.steps[s.key]))}`).join(' ; ') || 'note seule'}${d.note ? `<br><span class="muted">${esc(d.note)}</span>` : ''}</span>
-      <span class="lot-tools"><button class="btn btn-secondary btn-icon" data-act="cal-edit" data-year="${d.year}" aria-label="Modifier l’ajustement ${d.year}">${ico('pencil',16)}</button><button class="btn btn-ghost btn-icon" data-act="cal-del" data-id="${d.id}" aria-label="Supprimer l’ajustement ${d.year}">${ico('trash-2',16)}</button></span></li>`).join('')}</ul>` : ''}
+    <div class="sel-row"><button class="btn btn-primary" data-act="cal-edit">${ico('pencil',18)} Ajuster cette variété en ${Y}</button><button class="btn btn-secondary" data-act="cal-edit" data-scope="species">${ico('copy',18)} Ajuster toute l’espèce « ${esc(p.species)} » en ${Y}</button></div>
+    ${calHistHtml(p)}
   </section>`;
+}
+
+function calHistHtml(p){
+  const all = [...calDocsOf(p.id).map(d => ({ d, sc:'plant' })), ...calSpeciesDocs(p).map(d => ({ d, sc:'species' }))].sort((a,b) => b.d.year - a.d.year || (a.sc === 'plant' ? -1 : 1));
+  if (!all.length) return '';
+  return `<h3 style="margin-top:var(--space-4)">Historique de mes ajustements</h3><ul class="cal-hist">${all.map(({ d, sc }) => `<li><span><strong>${d.year}</strong> · <span class="badge">${sc === 'species' ? 'Toutes les variétés « ' + esc(p.species) + ' »' : 'Cette variété'}</span> ${CSTEPS.filter(s => d.steps && Array.isArray(d.steps[s.key])).map(s => `${s.label} : ${esc(fmtWins(d.steps[s.key]))}`).join(' ; ') || 'note seule'}${d.note ? `<br><span class="muted">${esc(d.note)}</span>` : ''}</span>
+      <span class="lot-tools"><button class="btn btn-secondary btn-icon" data-act="cal-edit" data-year="${d.year}" data-scope="${sc}" aria-label="Modifier l’ajustement ${d.year}">${ico('pencil',16)}</button><button class="btn btn-ghost btn-icon" data-act="cal-del" data-id="${d.id}" aria-label="Supprimer l’ajustement ${d.year}">${ico('trash-2',16)}</button></span></li>`).join('')}</ul>`;
 }
 const selOpts = (arr, cur) => arr.map(([v,t]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${t}</option>`).join('');
 function calWinRow(w){
@@ -1865,17 +1906,22 @@ function calWinRow(w){
     <select class="input" data-w="em" aria-label="Fin : mois">${selOpts(ms, w[1] >> 1)}</select>
     <button type="button" class="btn btn-ghost btn-icon" data-act="cal-rm-win" aria-label="Retirer cette période">${ico('x',16)}</button></div>`;
 }
-function calForm(p, Y){
-  const doc = byId(state.calendars, `cal-${p.id}-${Y}`), inh = calEffective(p, Y, Y);
-  return `<form data-form="cal" data-plant="${p.id}" novalidate>
-    <h2 id="modal-title">Ajuster le calendrier · ${esc(label(p))}</h2>
+function calForm(p, Y, scope = 'plant'){
+  const sp = scope === 'species', doc = byId(state.calendars, sp ? `cals-${calSpKey(p)}-${Y}` : `cal-${p.id}-${Y}`), inh = calEffective(p, Y, Y, scope);
+  const nSp = state.plants.filter(x => calSpKey(x) === calSpKey(p)).length;
+  return `<form data-form="cal" data-plant="${p.id}" data-scope="${scope}" novalidate>
+    <h2 id="modal-title">Ajuster le calendrier · ${sp ? 'toutes les variétés de « ' + esc(p.species) + ' »' : esc(label(p))}</h2>
+    <fieldset class="field" style="border:0;padding:0"><legend style="font-weight:600;margin-bottom:var(--space-2)">Portée de l’ajustement</legend>
+      <label style="display:flex;gap:var(--space-2);align-items:center;min-height:36px"><input type="radio" name="cal-scope" value="plant" ${sp ? '' : 'checked'}> Cette variété seulement (${esc(label(p))})</label>
+      <label style="display:flex;gap:var(--space-2);align-items:center;min-height:36px"><input type="radio" name="cal-scope" value="species" ${sp ? 'checked' : ''}> Toutes les variétés de l’espèce « ${esc(p.species)} » (${plural(nSp,'fiche')})</label>
+      <span class="hint">Un ajustement propre à une variété l’emporte sur celui de l’espèce. Les autres espèces, même de la même famille botanique, ne sont pas concernées.</span></fieldset>
     <div class="field"><label for="cal-year">Année de l’ajustement</label><input class="input" id="cal-year" name="year" type="number" min="2000" max="2100" value="${Y}">
       <span class="hint">L’ajustement vaut pour cette année et les suivantes, jusqu’à un nouvel ajustement.</span></div>
     <p class="muted" style="margin-bottom:var(--space-3)">Cochez les étapes à personnaliser. Les autres gardent la valeur héritée (préconisé ou ajustement précédent).</p>
     ${CSTEPS.map(s => { const on = !!(doc && doc.steps && Array.isArray(doc.steps[s.key])), wins = on ? doc.steps[s.key] : [];
       return `<div class="cal-edit-step" data-key="${s.key}">
         <label style="display:flex;gap:var(--space-2);align-items:center"><input type="checkbox" data-calon="${s.key}" ${on ? 'checked' : ''}> <strong>${s.label}</strong></label>
-        <p class="cal-txt" data-inh ${on ? 'hidden' : ''}>Valeur héritée : ${esc(fmtWins(inh.out[s.key].win))}${inh.out[s.key].src === 'mine' ? ` (ajustement ${inh.out[s.key].year})` : inh.out[s.key].src === 'ref' ? ' (préconisé)' : ''}.</p>
+        <p class="cal-txt" data-inh ${on ? 'hidden' : ''}>Valeur héritée : ${esc(fmtWins(inh.out[s.key].win))}${inh.out[s.key].src === 'mine' ? ` (ajustement ${inh.out[s.key].scope === 'species' ? 'espèce ' : ''}${inh.out[s.key].year})` : inh.out[s.key].src === 'ref' ? ' (préconisé)' : ''}.</p>
         <div data-editor ${on ? '' : 'hidden'}><div data-wins>${wins.map(calWinRow).join('')}</div>
           <button type="button" class="btn btn-secondary" style="margin-top:var(--space-2)" data-act="cal-add-win">${ico('plus',16)} Ajouter une période</button>
           <p class="hint">Sans période, l’étape est considérée comme « non pratiquée » cette année-là.</p></div></div>`; }).join('')}
@@ -1899,17 +1945,17 @@ handlers.cal = f => {
     steps[box.dataset.key] = wins.sort((a,b) => a[0] - b[0]);
   });
   showErr(f,'win',bad); if (bad) return;
-  const note = fd.note.trim(), id = `cal-${p.id}-${Y}`, ex = byId(state.calendars, id);
+  const scope = f.dataset.scope === 'species' ? 'species' : 'plant', note = fd.note.trim(), id = scope === 'species' ? `cals-${calSpKey(p)}-${Y}` : `cal-${p.id}-${Y}`, ex = byId(state.calendars, id);
   if (!Object.keys(steps).length && !note) {
     if (ex) { removeItems('calendars', x => x.id === id); persist(); toast('Ajustement supprimé'); } else toast('Aucun ajustement à enregistrer');
     closeModal(); calUI.year = Y; render(); return;
   }
-  if (ex) touch(Object.assign(ex, { steps, note })); else state.calendars.push(touch({ id, plantId:p.id, year:Y, steps, note }));
-  persist(); closeModal(); calUI.year = Y; toast(`Calendrier ajusté pour ${Y}`); render();
+  if (ex) touch(Object.assign(ex, { steps, note })); else state.calendars.push(touch(scope === 'species' ? { id, scope:'species', speciesKey:calSpKey(p), speciesName:p.species, year:Y, steps, note } : { id, plantId:p.id, year:Y, steps, note }));
+  persist(); closeModal(); calUI.year = Y; toast(scope === 'species' ? `Calendrier ajusté pour toutes les variétés « ${p.species} » (${Y})` : `Calendrier ajusté pour ${Y}`); render();
 };
 Object.assign(actions, {
   'cal-year': el => { calUI.year += +el.dataset.d; render(); },
-  'cal-edit': el => { const p = byId(state.plants, parseRoute().id); if (!p) return; const Y = el.dataset.year ? +el.dataset.year : calUI.year; openModal(calForm(p, Y)); },
+  'cal-edit': el => { const p = byId(state.plants, parseRoute().id); if (!p) return; const Y = el.dataset.year ? +el.dataset.year : calUI.year; openModal(calForm(p, Y, el.dataset.scope === 'species' ? 'species' : 'plant')); },
   'cal-del': el => { const d = byId(state.calendars, el.dataset.id); if (!d) return;
     confirmBox(`Supprimer l’ajustement de ${d.year} ? Le calendrier reviendra à la valeur précédente ou préconisée.`, () => { removeItems('calendars', x => x.id === d.id); persist(); toast('Ajustement supprimé'); render(); }); },
   'cal-add-win': el => { const wrap = el.closest('[data-editor]').querySelector('[data-wins]'); wrap.insertAdjacentHTML('beforeend', calWinRow([4,7])); refreshIcons(); },
@@ -1921,7 +1967,7 @@ document.addEventListener('change', e => {
   ed.hidden = !t.checked; inh.hidden = t.checked;
   if (t.checked && !ed.querySelector('.cal-win')) {
     const p = byId(state.plants, box.closest('form').dataset.plant), Y = +$('#cal-year').value || calUI.year;
-    const w = p ? calEffective(p, Y, Y).out[box.dataset.key].win : [];
+    const w = p ? calEffective(p, Y, Y, box.closest('form').dataset.scope || 'plant').out[box.dataset.key].win : [];
     box.querySelector('[data-wins]').innerHTML = (w.length ? w : [[4,7]]).map(calWinRow).join(''); refreshIcons();
   }
 });
@@ -2039,6 +2085,152 @@ document.addEventListener('change', e => {
   else if (t.id === 'pl-real') { planningUI.real = t.checked; refreshPlanning(); }
 });
 
+
+/* =====================================================================
+   Table de référence des espèces : famille, graines/g, plants/m², durée de vie des graines
+===================================================================== */
+const SPEC_DB = [{"id":"ail","grp":"ail","n":"Ail","f":"Amaryllidacées","g":"150 caïeux/kg","p":"20 à 22 caïeux","v":null,"k":"p","a":["ail"]},{"id":"amarante","grp":"amarante","n":"Amarante","f":"Amaranthacées","g":"150 à 300","p":"150 à 300 graines/m²","v":10,"k":"p","a":["amarante"]},{"id":"arachide","grp":"arachide","n":"Arachide","f":"Fabacées","g":"2 à 3","p":"16 à 25","v":1,"k":"p","a":["arachide"]},{"id":"arroche","grp":"arroche","n":"Arroche","f":"Amaranthacées","g":"250 à 350","p":"10","v":6,"k":"p","a":["arroche"]},{"id":"artichaut","grp":"artichaut","n":"Artichaut","f":"Astéracées","g":"35 à 50","p":"1.25","v":5,"k":"p","a":["artichaut"]},{"id":"asperge","grp":"asperge","n":"Asperge","f":"Asparagées","g":"20","p":"0.8 à 1.2 griffes","v":null,"k":"p","a":["asperge"]},{"id":"aubergine","grp":"aubergine","n":"Aubergine","f":"Solanacées","g":"150 à 260","p":"1.2 à 2.5","v":4,"k":"p","a":["aubergine"]},{"id":"betterave","grp":"betterave","n":"Betterave","f":"Amaranthacées","g":"50 à 110 glomérules","p":"35 à 60","v":5,"k":"p","a":["betterave"]},{"id":"blette-poiree","grp":"blette-poiree","n":"Blette-poirée","f":"Amaranthacées","g":"75 glomérules","p":"3 à 14","v":5,"k":"p","a":["bette","blette","blette poiree","poiree"]},{"id":"cardon","grp":"cardon","n":"Cardon","f":"Astéracées","g":"25","p":"1.2 à 2","v":5,"k":"p","a":["cardon"]},{"id":"carotte","grp":"carotte","n":"Carotte","f":"Apiacées","g":"350 à 1 400","p":"90 à 200 graines/m²","v":4,"k":"p","a":["carotte"]},{"id":"celeri-branche","grp":"celeri-branche","n":"Céleri branche","f":"Apiacées","g":"2 000","p":"5 à 14","v":5,"k":"p","a":["celeri","celeri branche"]},{"id":"celeri-rave","grp":"celeri-rave","n":"Céleri rave","f":"Apiacées","g":"2 000","p":"4 à 14","v":5,"k":"p","a":["celeri rave"]},{"id":"chicoree-frisee-scarole","grp":"chicoree-frisee-scarole","n":"Chicorée (frisée, scarole)","f":"Astéracées","g":"260 à 800","p":"4 à 10","v":5,"k":"p","a":["chicoree","chicoree frisee","frisee","scarole"]},{"id":"chicoree-de-bruxelles","grp":"chicoree-de-bruxelles","n":"Chicorée de Bruxelles","f":"Astéracées","g":"550 à 700","p":"25 à 40 graines/m²","v":4,"k":"p","a":["chicoree de bruxelles","endive"]},{"id":"chicoree-sauvage","grp":"chicoree-sauvage","n":"Chicorée sauvage","f":"Astéracées","g":"550 à 700","p":"10 à 15","v":4,"k":"p","a":["chicoree sauvage"]},{"id":"chou-pomme","grp":"chou-pomme","n":"Chou pommé","f":"Brassicacées","g":"200 à 300","p":"1.5 à 2","v":4,"k":"p","a":["chou blanc","chou cabus","chou de milan","chou pomme","chou rouge"]},{"id":"chou-de-bruxelles","grp":"chou-de-bruxelles","n":"Chou de Bruxelles","f":"Brassicacées","g":"250 à 600","p":"1.6 à 2.5","v":4,"k":"p","a":["chou de bruxelles"]},{"id":"chou-de-chine","grp":"chou-de-chine","n":"Chou de Chine","f":"Brassicacées","g":"400 à 500","p":"6 à 20","v":4,"k":"p","a":["chou de chine","pak choi","pe tsai"]},{"id":"chou-navet-rutabaga","grp":"chou-navet-rutabaga","n":"Chou-navet rutabaga","f":"Brassicacées","g":"300 à 400","p":"8 à 10","v":4,"k":"p","a":["chou navet","rutabaga"]},{"id":"chou-fleur-et-brocoli","grp":"chou-fleur-et-brocoli","n":"Chou-fleur et Brocoli","f":"Brassicacées","g":"200 à 400","p":"1.5 à 3","v":4,"k":"p","a":["brocoli","chou brocoli","chou fleur","chou fleur et brocoli"]},{"id":"chou-rave","grp":"chou-rave","n":"Chou-rave","f":"Brassicacées","g":"430 à 780","p":"11 à 14","v":4,"k":"p","a":["chou rave"]},{"id":"concombre","grp":"concombre","n":"Concombre","f":"Cucurbitacées","g":"30 à 50","p":"0.9 à 1.8","v":5,"k":"p","a":["concombre"]},{"id":"cornichon","grp":"cornichon","n":"Cornichon","f":"Cucurbitacées","g":"30 à 40","p":"2 à 2.5","v":5,"k":"p","a":["cornichon"]},{"id":"courge--potiron---potimarron","grp":"courge--potiron---potimarron","n":"Courge / Potiron - Potimarron","f":"Cucurbitacées","g":"2 à 10","p":"1","v":5,"k":"p","a":["butternut","citrouille","courge","giraumon","potimarron","potiron"]},{"id":"courgette","grp":"courgette","n":"Courgette","f":"Cucurbitacées","g":"5 à 10","p":"1.3 à 1.5","v":5,"k":"p","a":["courgette"]},{"id":"echalote","grp":"echalote","n":"Échalote","f":"Amaryllidacées","g":"250 à 300","p":"180 à 200 graines/m²","v":3,"k":"p","a":["echalote"]},{"id":"epinard","grp":"epinard","n":"Épinard","f":"Amaranthacées","g":"65 à 100","p":"14 à 20","v":4,"k":"p","a":["epinard"]},{"id":"fenouil","grp":"fenouil","n":"Fenouil","f":"Apiacées","g":"130 à 250","p":"11 à 14","v":3,"k":"p","a":["fenouil"]},{"id":"feve","grp":"feve","n":"Fève","f":"Fabacées","g":"0,5 à 1","p":"20","v":3,"k":"p","a":["feve"]},{"id":"gombo","grp":"gombo","n":"Gombo","f":"Malvacées","g":"15 à 20","p":"0.8 à 1","v":5,"k":"p","a":["gombo"]},{"id":"haricot","grp":"haricot","n":"Haricot","f":"Fabacées","g":"1 à 10","p":"4 à 5","v":3,"k":"p","a":["haricot"]},{"id":"kiwano","grp":"kiwano","n":"Kiwano","f":"Cucurbitacées","g":"50 à 70","p":"1","v":5,"k":"p","a":["kiwano"]},{"id":"laitue","grp":"laitue","n":"Laitue","f":"Astéracées","g":"800 à 1000","p":"14","v":4,"k":"p","a":["laitue"]},{"id":"lentille","grp":"lentille","n":"Lentille","f":"Fabacées","g":"30 à 35","p":"250","v":3,"k":"p","a":["lentille"]},{"id":"mache","grp":"mache","n":"Mâche","f":"Caprifoliacées","g":"550 à 900","p":"32 à 40","v":5,"k":"p","a":["mache"]},{"id":"mais","grp":"mais","n":"Maïs","f":"Poacées","g":"4 à 6","p":"8 à 10","v":4,"k":"p","a":["mais"]},{"id":"melon","grp":"melon","n":"Melon","f":"Cucurbitacées","g":"30 à 35","p":"1.1 à 1.2","v":5,"k":"p","a":["melon"]},{"id":"navet","grp":"navet","n":"Navet","f":"Brassicacées","g":"400 à 600","p":"50 à 70","v":5,"k":"p","a":["navet"]},{"id":"oignon","grp":"oignon","n":"Oignon","f":"Amaryllidacées","g":"250","p":"22","v":3,"k":"p","a":["oignon"]},{"id":"oseille","grp":"oseille","n":"Oseille","f":"Polygonacées","g":"1 000 à 1 700","p":"8 à 10","v":3,"k":"p","a":["oseille"]},{"id":"panais","grp":"panais","n":"Panais","f":"Apiacées","g":"250 à 500","p":"30 à 40","v":2,"k":"p","a":["panais"]},{"id":"pasteque","grp":"pasteque","n":"Pastèque","f":"Cucurbitacées","g":"15 à 30","p":"0.6 à 1.2","v":5,"k":"p","a":["pasteque"]},{"id":"patisson","grp":"patisson","n":"Pâtisson","f":"Cucurbitacées","g":"10 à 13","p":"0.8 à 1","v":5,"k":"p","a":["patisson"]},{"id":"persil-tubereux","grp":"persil-tubereux","n":"Persil tubéreux","f":"Apiacées","g":"420 à 830","p":"5 à 7","v":4,"k":"p","a":["persil tubereux"]},{"id":"physalis","grp":"physalis","n":"Physalis","f":"Solanacées","g":"820","p":"1.5","v":5,"k":"p","a":["physalis"]},{"id":"piment","grp":"piment","n":"Piment","f":"Solanacées","g":"150 à 180","p":"1.5 à 2.5","v":3,"k":"p","a":["piment"]},{"id":"pissenlit","grp":"pissenlit","n":"Pissenlit","f":"Astéracées","g":"1 200 à 1 300","p":"1.5","v":2,"k":"p","a":["pissenlit"]},{"id":"poireau","grp":"poireau","n":"Poireau","f":"Liliacées","g":"350 à 400","p":"10 à 15","v":3,"k":"p","a":["poireau"]},{"id":"pois","grp":"pois","n":"Pois","f":"Fabacées","g":"3 à 10","p":"30 à 42 graines/m²","v":4,"k":"p","a":["pois"]},{"id":"pois-chiche","grp":"pois-chiche","n":"Pois-chiche","f":"Fabacées","g":"2 à 4","p":"50 à 60 graines/m²","v":4,"k":"p","a":["pois chiche"]},{"id":"poivron","grp":"poivron","n":"Poivron","f":"Solanacées","g":"100 à 350","p":"1.9 à 4","v":4,"k":"p","a":["poivron"]},{"id":"pomme-de-terre","grp":"pomme-de-terre","n":"Pomme de terre","f":"Solanacées","g":"","p":"3 à 6.5","v":null,"k":"p","a":["pomme de terre"]},{"id":"radis","grp":"radis","n":"Radis","f":"Brassicacées","g":"80 à 130","p":"370 à 445","v":5,"k":"p","a":["radis"]},{"id":"roquette","grp":"roquette","n":"Roquette","f":"Brassicacées","g":"500 à 4 000","p":"28","v":5,"k":"p","a":["roquette"]},{"id":"rhubarbe","grp":"rhubarbe","n":"Rhubarbe","f":"Polygonacées","g":"50 à 60","p":"1.5","v":3,"k":"p","a":["rhubarbe"]},{"id":"scorsonere","grp":"scorsonere","n":"Scorsonère","f":"Astéracées","g":"80 à 100","p":"30 à 35","v":2,"k":"p","a":["scorsonere"]},{"id":"soja-edamame","grp":"soja-edamame","n":"Soja edamame","f":"Fabacées","g":"2 à 3","p":"25","v":3,"k":"p","a":["edamame","soja","soja edamame"]},{"id":"tetragone","grp":"tetragone","n":"Tétragone","f":"Aizoacées","g":"10 à 14","p":"1 à 2","v":4,"k":"p","a":["tetragone"]},{"id":"tomate-plein-champ","grp":"tomate","n":"Tomate","f":"Solanacées","g":"250 à 500","p":"1.3 à 1.8","v":5,"k":"p","a":["tomate"],"x":"Plein champ"},{"id":"tomate-sous-abri","grp":"tomate","n":"Tomate","f":"Solanacées","g":"250 à 350","p":"2.5","v":5,"k":"p","a":["tomate"],"x":"Sous abri"},{"id":"aneth","grp":"aneth-aro","n":"Aneth","f":"Apiacées","g":"450 à 830","p":"10 à 16","v":5,"k":"a","a":["aneth"]},{"id":"basilic","grp":"basilic-aro","n":"Basilic","f":"Lamiacées","g":"200 à 1 000","p":"17","v":4,"k":"a","a":["basilic"]},{"id":"bourrache","grp":"bourrache-aro","n":"Bourrache","f":"Boraginacées","g":"60 à 65","p":"35 à 40","v":4,"k":"a","a":["bourrache"]},{"id":"ciboulette","grp":"ciboulette-aro","n":"Ciboulette","f":"Amaryllidacées","g":"700 à 900","p":"20","v":2,"k":"a","a":["ciboulette"]},{"id":"ciboule-de-chine","grp":"ciboule-de-chine-aro","n":"Ciboule de Chine","f":"Amaryllidacées","g":"200 à 250","p":"15","v":2,"k":"a","a":["ciboule","ciboule de chine"]},{"id":"coriandre","grp":"coriandre-aro","n":"Coriandre","f":"Apiacées","g":"50 à 100","p":"1.2 à 2","v":5,"k":"a","a":["coriandre"]},{"id":"liveche","grp":"liveche-aro","n":"Livèche","f":"Apiacées","g":"200 à 500","p":"3.5","v":3,"k":"a","a":["liveche"]},{"id":"menthe","grp":"menthe-aro","n":"Menthe","f":"Lamiacées","g":"10 000 à 13 000","p":"7 à 9","v":4,"k":"a","a":["menthe"]},{"id":"origan","grp":"origan-aro","n":"Origan","f":"Lamiacées","g":"4 500 à 10 500","p":"12 à 15","v":3,"k":"a","a":["origan"]},{"id":"persil","grp":"persil-aro","n":"Persil","f":"Apiacées","g":"350 à 600","p":"15","v":4,"k":"a","a":["persil"]},{"id":"perilla","grp":"perilla-aro","n":"Périlla","f":"Lamiacées","g":"800 à 1 000","p":"5.6","v":2,"k":"a","a":["perilla"]},{"id":"romarin","grp":"romarin-aro","n":"Romarin","f":"Lamiacées","g":"500 à 1 000","p":"1","v":2,"k":"a","a":["romarin"]},{"id":"sarriette","grp":"sarriette-aro","n":"Sarriette","f":"Lamiacées","g":"1 500 à 2 000","p":"1.8","v":2,"k":"a","a":["sarriette"]},{"id":"sauge","grp":"sauge-aro","n":"Sauge","f":"Lamiacées","g":"100 à 200","p":"3","v":2,"k":"a","a":["sauge"]},{"id":"thym","grp":"thym-aro","n":"Thym","f":"Lamiacées","g":"3 000 à 5 000","p":"5","v":3,"k":"a","a":["thym"]}];
+const SPEC_FAM_CANON = { 'Amaryllidacées':'Alliacées', 'Liliacées':'Alliacées' };
+const FAMILY_EXTRA = ['Malvacées','Caprifoliacées','Polygonacées','Aizoacées','Boraginacées','Asparagées'];
+const specCanon = f => SPEC_FAM_CANON[f] || f;
+const SPEC_INDEX = SPEC_DB.flatMap(e => e.a.map(k => ({ k:nrm3(k), e }))).map(o => ({ ...o, re:new RegExp('(^|[^a-z])' + o.k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '[sx]?($|[^a-z])') })).sort((a,b) => b.k.length - a.k.length);
+function specDbFor(p){
+  const sp = nrm3(p.species || ''), full = nrm3((p.species || '') + ' ' + (p.variety || ''));
+  const hit = SPEC_INDEX.find(o => o.re.test(sp)) || SPEC_INDEX.find(o => o.re.test(full));
+  return hit ? SPEC_DB.filter(e => e.grp === hit.e.grp) : null;
+}
+function specFamilyGuess(sp){ const r = specDbFor({ species:sp, variety:'' }); return r ? specCanon(r[0].f) : ''; }
+const hasUnit = t => /[a-zéèïç]{2,}/i.test(t);
+const fmtSeedsG = t => !t ? '—' : hasUnit(t) ? (t.includes('/') ? t : t + '/g') : t + ' graines/g';
+const fmtDens = t => !t ? '—' : hasUnit(t) ? (t.includes('/m²') ? t : t + '/m²') : t + ' plants/m²';
+function specCardHtml(p){
+  const rows = specDbFor(p); if (!rows) return '';
+  const multi = rows.length > 1, val = f => rows.map(e => (multi && e.x ? esc(e.x) + ' : ' : '') + esc(f(e))).join('<br>');
+  const fam = rows[0].f, canon = specCanon(fam), lives = rows.map(e => e.v).filter(Boolean);
+  const pom = SEED_INDEX.find(o => o.re.test(nrm2(p.species)));
+  const life = lives.length ? [...new Set(lives)].map(v => plural(v,'an')).join(' / ') : '—';
+  const pomTxt = pom && !(lives.length && lives.every(v => v === pom.years)) ? `<small>Pomologie : ${plural(pom.years,'an')} (utilisée pour le stock)</small>` : '';
+  return `<section class="card spec-card" aria-labelledby="h-spec"><h2 id="h-spec" style="font-size:var(--text-lg)">Données de l’espèce</h2>
+    <p class="muted" style="font-size:var(--text-sm)">Table de référence (plantes ${rows[0].k === 'a' ? 'aromatiques' : 'potagères'}) : ${esc(rows[0].n)}${multi ? '' : rows[0].x ? ' (' + esc(rows[0].x) + ')' : ''}.</p>
+    <dl class="stats">
+      <div class="stat"><dt>Famille</dt><dd>${esc(fam)}${canon !== fam ? `<small>classée « ${esc(canon)} » dans l’application</small>` : ''}</dd></div>
+      <div class="stat"><dt>Graines nues par gramme</dt><dd>${val(e => fmtSeedsG(e.g))}</dd></div>
+      <div class="stat"><dt>Densité conseillée</dt><dd>${val(e => fmtDens(e.p))}</dd></div>
+      <div class="stat"><dt>Durée de vie des graines</dt><dd>${life}${pomTxt}</dd></div>
+    </dl>
+    ${p.family !== canon ? `<div class="alert">${ico('info',18)}<span>Famille de la fiche : « ${esc(p.family || 'non renseignée')} ». La table indique « ${esc(canon)} ». <button class="btn btn-secondary" data-act="apply-spec-family" data-id="${p.id}" data-fam="${esc(canon)}">Appliquer à la fiche</button></span></div>` : ''}
+  </section>`;
+}
+function updateDensity(){
+  const el = $('#c-dens'); if (!el) return;
+  const p = byId(state.plants, ($('#c-plant') || {}).value), ids = [...pickerSel()];
+  const rows = p && ids.length ? specDbFor(p) : null;
+  if (!rows) { el.innerHTML = ''; return; }
+  const cell = gardenCfg().cellM, area = Math.round(ids.length * cell * cell * 100) / 100;
+  const lines = rows.map(e => { const nums = (e.p.match(/\d+(?:[.,]\d+)?/g) || []).map(x => parseFloat(x.replace(',', '.'))); if (!nums.length) return '';
+    const lo = Math.min(...nums), hi = Math.max(...nums), f = n => Math.round(n * area).toLocaleString('fr-FR');
+    const unit = /graines/.test(e.p) ? 'graines' : /caïeux/.test(e.p) ? 'caïeux' : /griffes/.test(e.p) ? 'griffes' : 'plants';
+    return `${e.x ? e.x + ' : ' : ''}${fmtDens(e.p)} → environ ${lo === hi ? f(lo) : f(lo) + ' à ' + f(hi)} ${unit} pour ${area} m²`; }).filter(Boolean);
+  el.innerHTML = lines.length ? `${ico('ruler',14)} ${lines.map(esc).join(' · ')}` : '';
+  refreshIcons();
+}
+function specTableHtml(){
+  const row = e => `<tr data-q="${esc(nrm3(e.n + ' ' + (e.x || '') + ' ' + e.f))}"><th scope="row">${esc(e.n)}${e.x ? ' <span class="muted">(' + esc(e.x) + ')</span>' : ''}</th><td>${esc(e.f)}</td><td>${esc(fmtSeedsG(e.g))}</td><td>${esc(fmtDens(e.p))}</td><td>${e.v ? plural(e.v,'an') : '—'}</td></tr>`;
+  const part = (k, t) => `<h3>${t}</h3><div class="spec-wrap"><table class="spec-table" style="width:100%"><thead><tr><th>Espèce</th><th>Famille</th><th>Graines nues / g</th><th>Plants / m²</th><th>Durée de vie des graines</th></tr></thead><tbody>${SPEC_DB.filter(e => e.k === k).map(row).join('')}</tbody></table></div>`;
+  return `<details class="card" style="margin-top:var(--space-4)"><summary style="cursor:pointer;font-weight:700">Table de référence des espèces (${SPEC_DB.length} lignes)</summary>
+    <p class="muted" style="margin:var(--space-3) 0">Famille, nombre de graines nues par gramme, densité de plantation et durée de vie des graines. Ces valeurs s’affichent dans les fiches. Pour le stock de graines, la durée de la Pomologie reste prioritaire ; cette table sert quand l’espèce n’y figure pas.</p>
+    <div class="field"><label for="spec-q">Rechercher</label><input class="input" id="spec-q" type="search" placeholder="Espèce ou famille"></div>
+    ${part('p','Plantes potagères')}${part('a','Plantes aromatiques')}</details>`;
+}
+Object.assign(actions, {
+  'apply-spec-family': el => { const p = byId(state.plants, el.dataset.id); if (!p) return; p.family = el.dataset.fam; touch(p); persist(); toast('Famille de la fiche mise à jour'); render(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id !== 'spec-q') return;
+  const q = nrm3(e.target.value);
+  document.querySelectorAll('.spec-table tbody tr').forEach(tr => { tr.hidden = !!q && !tr.dataset.q.includes(q); });
+});
+
+document.addEventListener('change', e => {
+  const t = e.target; if (t.name !== 'cal-scope') return;
+  const f = t.closest('form[data-form=cal]'), p = f && byId(state.plants, f.dataset.plant); if (!p) return;
+  openModal(calForm(p, +$('#cal-year').value || calUI.year, t.value));
+});
+
+
+/* =====================================================================
+   Aide en ligne : centre d'aide, bulles contextuelles, visite guidée
+===================================================================== */
+const HELP = [
+  { id:'demarrer', title:'Démarrer', ctx:'', body:`<ol><li>Créez une fiche avec <strong>Nouvelle fiche</strong> (espèce et variété sont obligatoires).</li><li>Ajoutez-y des cultures par année et suivez leurs étapes.</li><li>Notez vos observations dans le journal de la fiche, avec une photo si besoin.</li><li>Faites une sauvegarde JSON régulièrement (voir « Sauvegarde et appareils »).</li></ol>` },
+  { id:'accueil', title:'Accueil', ctx:'home', body:`<p>Vue d’ensemble de la saison en cours.</p><ul><li><strong>À venir · 30 jours</strong> : les étapes prévues dans le mois.</li><li><strong>Récoltes par année</strong> : graphique des kilos récoltés.</li><li><strong>Dernières notes</strong> : les dernières entrées de vos journaux.</li></ul>` },
+  { id:'lexique', title:'Lexique et fiches', ctx:'lexique', body:`<p>Le lexique liste toutes vos fiches, classées par espèce puis par variété.</p><ul><li>Le champ de recherche accepte une espèce, une variété ou une famille.</li><li>Dans une fiche : cultures et étapes, photos, journal et autres variétés de la même espèce.</li><li>Cliquez sur une photo pour l’agrandir.</li></ul>` },
+  { id:'graines', title:'Stock de graines', ctx:'graines', body:`<p>Chaque lot est comparé à la durée de conservation recommandée pour l’espèce.</p><ul><li>Le millésime est l’année d’achat ou de récolte.</li><li>La durée de conservation personnalisée (facultative) remplace la durée recommandée.</li><li>Renseignez la date du dernier test de germination pour garder une trace.</li><li>Un lot peut être lié à une fiche.</li></ul>` },
+  { id:'plan', title:'Plan du jardin', ctx:'plan', body:`<p>Le jardin est une grille de carrés. Les dimensions et la taille des carrés sont affichées en haut du plan.</p><ul><li>Une <strong>zone</strong> regroupe des carrés.</li><li>Une <strong>culture</strong> est placée par année : le plan garde l’historique, utile pour la rotation.</li><li>Changez d’année avec les flèches de la barre du plan.</li></ul>` },
+  { id:'planning', title:'Planning', ctx:'planning', body:`<p>Douze mois glissants pour les fiches choisies.</p><ul><li><strong>Barres pleines</strong> : périodes retenues (préconisées ou ajustées par vous).</li><li><strong>Barres en pointillés</strong> : période préconisée que vous avez écartée.</li><li><strong>Ronds</strong> : dates réellement réalisées.</li></ul>` },
+  { id:'annuler', title:'Annuler et historique', ctx:'', body:`<ul><li><kbd>Ctrl</kbd>+<kbd>Z</kbd> annule, <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd> rétablit (ou les flèches de l’en-tête).</li><li>Le bouton Historique liste les modifications et permet de revenir plusieurs étapes en arrière.</li></ul>` },
+  { id:'data', title:'Sauvegarde et appareils', ctx:'data', body:`<p>Les données sont stockées <strong>localement</strong> dans le navigateur de chaque appareil (IndexedDB). Il n’y a pas de synchronisation automatique entre votre PC et votre Android.</p><ul><li>La barre en haut indique si des modifications ne sont pas sauvegardées.</li><li>Utilisez « Sauvegarder / Restaurer » pour exporter un fichier, le transférer sur l’autre appareil, puis l’importer.</li><li>À l’import, choisissez entre fusionner avec les données de l’appareil ou les remplacer.</li><li>Une copie de sécurité d’avant la dernière restauration reste disponible pour annuler.</li><li>« Réinitialiser » efface les données : à utiliser avec précaution.</li></ul>` },
+  { id:'install', title:'Installer l’application', ctx:'', body:`<p>Le bouton <strong>Installer</strong> apparaît quand votre navigateur le permet (Chrome, Edge, Android). L’application fonctionne ensuite hors ligne.</p><p>Après une mise à jour, fermez puis rouvrez l’application pour charger la nouvelle version.</p>` },
+  { id:'theme', title:'Thème clair / sombre', ctx:'', body:`<p>Le bouton de l’en-tête bascule entre le mode clair et le mode sombre.</p>` }
+];
+const HELP_CTX = { home:'accueil', lexique:'lexique', plant:'lexique', graines:'graines', plan:'plan', jardin:'plan', planning:'planning', data:'data' };
+const helpSec = (h, open) => `<details class="card help-sec" id="help-${h.id}" ${open?'open':''}><summary>${esc(h.title)}</summary><div class="help-body">${h.body}</div></details>`;
+function vHelp(){
+  return `<div class="main-inner">
+    <div class="page-header"><div><h1 class="page-title">Aide</h1><p class="page-sub">Mode d’emploi de Potager Nexus, disponible hors ligne.</p></div></div>
+    <div class="field" style="margin-bottom:var(--space-4)"><label for="help-q">Rechercher dans l’aide</label><input id="help-q" type="search" autocomplete="off" placeholder="Ex. sauvegarde, planning, graines"></div>
+    <div style="margin-bottom:var(--space-4)"><button class="btn btn-secondary" data-act="start-tour">${ico('route',18)} Revoir la visite guidée</button></div>
+    <div id="help-list">${HELP.map((h,i) => helpSec(h, i===0)).join('')}</div>
+    <p class="hint" id="help-none" hidden>Aucun résultat.</p>
+  </div>`;
+}
+document.addEventListener('input', e => {
+  if (e.target.id !== 'help-q') return;
+  const q = norm(e.target.value); let n = 0;
+  document.querySelectorAll('#help-list .help-sec').forEach(d => {
+    const ok = !q || norm(d.textContent).includes(q);
+    d.hidden = !ok; if (ok) n++; if (q) d.open = ok;
+  });
+  const none = $('#help-none'); if (none) none.hidden = n > 0;
+});
+function addHelpBtn(r){
+  const key = HELP_CTX[r.name]; if (!key) return;
+  const h = document.querySelector('#view h1.page-title'); if (!h || h.querySelector('.help-i')) return;
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'help-i'; b.textContent = '?';
+  b.dataset.act = 'help-ctx'; b.dataset.key = key;
+  b.setAttribute('aria-label', 'Aide sur cette page'); b.title = 'Aide sur cette page';
+  h.appendChild(b);
+}
+const TOUR = [
+  { t:'Bienvenue', b:'Potager Nexus est votre carnet de jardin : fiches, cultures, graines, plan et planning. Cette visite dure une minute.' },
+  { t:'Créer une fiche', b:'Le bouton « Nouvelle fiche » en haut crée une fiche par variété. Vous y suivez les cultures de chaque année, les photos et le journal.' },
+  { t:'Naviguer', b:'Le menu (en bas sur mobile, à gauche sur PC) donne accès à l’accueil, au lexique, aux graines, au plan, au planning et aux données.' },
+  { t:'Sauvegarder', b:'Vos données restent sur cet appareil. Utilisez la barre de sauvegarde pour exporter un fichier JSON, notamment pour passer du PC à Android.' },
+  { t:'Besoin d’aide ?', b:'Le bouton « ? » de l’en-tête ouvre le centre d’aide, et les petits « ? » à côté des titres expliquent chaque écran.' }
+];
+let tourI = 0;
+const tourSeen = () => { try { return localStorage.getItem('pn_tour_done') === '1'; } catch(e){ return true; } };
+const tourMark = () => { try { localStorage.setItem('pn_tour_done','1'); } catch(e){} };
+function showTour(){
+  const s = TOUR[tourI], last = tourI === TOUR.length-1;
+  openModal(`<h2 id="modal-title">${esc(s.t)}</h2><p class="tour-dots">Étape ${tourI+1} sur ${TOUR.length}</p><p>${esc(s.b)}</p>
+    <div class="modal-actions"><button class="btn btn-ghost" data-act="tour-skip">${last?'Fermer':'Passer'}</button>${tourI>0?'<button class="btn btn-secondary" data-act="tour-prev">Précédent</button>':''}${last?'':'<button class="btn btn-primary" data-act="tour-next">Suivant</button>'}</div>`);
+}
+function maybeTour(){ if (tourSeen()) return; tourMark(); tourI = 0; setTimeout(showTour, 500); }
+Object.assign(actions, {
+  'goto-help': () => { closeModal(); location.hash = '#/aide'; },
+  'help-ctx': el => {
+    const h = HELP.find(x => x.id === el.dataset.key); if (!h) return;
+    openModal(`<h2 id="modal-title">${esc(h.title)}</h2><div class="help-body" style="padding:0">${h.body}</div>
+      <div class="modal-actions"><button class="btn btn-secondary" data-act="goto-help">Centre d’aide</button><button class="btn btn-primary" data-act="close">Fermer</button></div>`);
+  },
+  'start-tour': () => { tourI = 0; showTour(); },
+  'tour-next': () => { tourI = Math.min(tourI+1, TOUR.length-1); showTour(); },
+  'tour-prev': () => { tourI = Math.max(tourI-1, 0); showTour(); },
+  'tour-skip': () => { tourMark(); closeModal(); }
+});
+
 /* =====================================================================
    Router & chart
 ===================================================================== */
@@ -2061,12 +2253,13 @@ function drawChart(){
 function render(){
   const r = parseRoute();
   document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav === (r.name==='plant' ? 'lexique' : r.name==='jardin' ? 'plan' : r.name)) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
-  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vPlan, graines:vSeeds, plan:vPlan, planning:vPlanning, data:vData };
+  const views = { home:vHome, lexique:vLex, plant:vPlant, jardin:vPlan, graines:vSeeds, plan:vPlan, planning:vPlanning, data:vData, aide:vHelp };
   const main = $('#view');
   try { main.innerHTML = (views[r.name] || vHome)(r); }
   catch(err){ main.innerHTML = `<div class="alert bad" role="alert">${ico('circle-alert',18)}<span>Erreur d\u2019affichage : ${esc(err.message)}. Sauvegardez vos données puis rechargez la page.</span></div>`; }
   updateBackupBar();
   refreshIcons();
+  addHelpBtn(r);
   if (r.name==='home') drawChart();
   if (r.name==='lexique' && pendingLexQ) { const i = $('#lex-q'); if (i) { i.value = pendingLexQ; $('#lex-list').innerHTML = lexList(pendingLexQ); refreshIcons(); } pendingLexQ = ''; }
   const key = r.name + '/' + (r.id||''); if (key !== lastRoute) { window.scrollTo(0,0); lastRoute = key; }
@@ -2089,6 +2282,7 @@ async function init(){
   }
   histReset();
   render();
+  maybeTour();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 window.addEventListener('load', init);
