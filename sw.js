@@ -1,12 +1,6 @@
-const VERSION = 'potager-nexus-v5';
+const VERSION = 'potager-nexus-v8';
 
-const CORE = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './icon-192.png',
-  './icon-512.png'
-];
+const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -19,9 +13,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k.startsWith('potager-nexus-') && k !== VERSION).map(k => caches.delete(k))
-      ))
+      .then(keys => Promise.all(keys.filter(k => k.startsWith('potager-nexus-') && k !== VERSION).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
