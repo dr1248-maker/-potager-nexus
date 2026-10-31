@@ -595,7 +595,7 @@ function updateBackupBar(){
   const msg = m.dirty
     ? `${ico('triangle-alert',20)}<span><strong>Modifications non sauvegardées.</strong> ${last}</span>`
     : `${ico('circle-check',20)}<span>Aucune modification en attente. ${last}</span>`;
-  bar.innerHTML = `<div class="backup-status">${msg}</div><button class="btn btn-primary" data-act="open-backup">${ico('save',18)} Sauvegarder / Restaurer via fichier JSON</button>`;
+  bar.innerHTML = `<div class="backup-status">${msg}</div><button class="btn btn-primary" data-act="open-backup">${ico('save',18)} Sauvegarder / Restaurer via fichier JSON</button><button class="btn btn-secondary" data-act="open-sync">${ico('cloud',18)} Synchroniser Drive</button>`;
   refreshIcons();
 }
 
@@ -2162,23 +2162,24 @@ document.addEventListener('change', e => {
    Aide en ligne : centre d'aide, bulles contextuelles, visite guidée
 ===================================================================== */
 const HELP = [
-  { id:'demarrer', title:'Démarrer', ctx:'', body:`<ol><li>Créez une fiche avec <strong>Nouvelle fiche</strong> (espèce et variété sont obligatoires).</li><li>Ajoutez-y des cultures par année et suivez leurs étapes.</li><li>Notez vos observations dans le journal de la fiche, avec une photo si besoin.</li><li>Faites une sauvegarde JSON régulièrement (voir « Sauvegarde et appareils »).</li></ol>` },
-  { id:'accueil', title:'Accueil', ctx:'home', body:`<p>Vue d’ensemble de la saison en cours.</p><ul><li><strong>À venir · 30 jours</strong> : les étapes prévues dans le mois.</li><li><strong>Récoltes par année</strong> : graphique des kilos récoltés.</li><li><strong>Dernières notes</strong> : les dernières entrées de vos journaux.</li></ul>` },
-  { id:'lexique', title:'Lexique et fiches', ctx:'lexique', body:`<p>Le lexique liste toutes vos fiches, classées par espèce puis par variété.</p><ul><li>Le champ de recherche accepte une espèce, une variété ou une famille.</li><li>Dans une fiche : cultures et étapes, photos, journal et autres variétés de la même espèce.</li><li>Cliquez sur une photo pour l’agrandir.</li></ul>` },
-  { id:'graines', title:'Stock de graines', ctx:'graines', body:`<p>Chaque lot est comparé à la durée de conservation recommandée pour l’espèce.</p><ul><li>Le millésime est l’année d’achat ou de récolte.</li><li>La durée de conservation personnalisée (facultative) remplace la durée recommandée.</li><li>Renseignez la date du dernier test de germination pour garder une trace.</li><li>Un lot peut être lié à une fiche.</li></ul>` },
-  { id:'plan', title:'Plan du jardin', ctx:'plan', body:`<p>Le jardin est une grille de carrés. Les dimensions et la taille des carrés sont affichées en haut du plan.</p><ul><li>Une <strong>zone</strong> regroupe des carrés.</li><li>Une <strong>culture</strong> est placée par année : le plan garde l’historique, utile pour la rotation.</li><li>Changez d’année avec les flèches de la barre du plan.</li></ul>` },
-  { id:'planning', title:'Planning', ctx:'planning', body:`<p>Douze mois glissants pour les fiches choisies.</p><ul><li><strong>Barres pleines</strong> : périodes retenues (préconisées ou ajustées par vous).</li><li><strong>Barres en pointillés</strong> : période préconisée que vous avez écartée.</li><li><strong>Ronds</strong> : dates réellement réalisées.</li></ul>` },
-  { id:'annuler', title:'Annuler et historique', ctx:'', body:`<ul><li><kbd>Ctrl</kbd>+<kbd>Z</kbd> annule, <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd> rétablit (ou les flèches de l’en-tête).</li><li>Le bouton Historique liste les modifications et permet de revenir plusieurs étapes en arrière.</li></ul>` },
-  { id:'data', title:'Sauvegarde et appareils', ctx:'data', body:`<p>Les données sont stockées <strong>localement</strong> dans le navigateur de chaque appareil (IndexedDB). Il n’y a pas de synchronisation automatique entre votre PC et votre Android.</p><ul><li>La barre en haut indique si des modifications ne sont pas sauvegardées.</li><li>Utilisez « Sauvegarder / Restaurer » pour exporter un fichier, le transférer sur l’autre appareil, puis l’importer.</li><li>À l’import, choisissez entre fusionner avec les données de l’appareil ou les remplacer.</li><li>Une copie de sécurité d’avant la dernière restauration reste disponible pour annuler.</li><li>« Réinitialiser » efface les données : à utiliser avec précaution.</li></ul>` },
-  { id:'install', title:'Installer l’application', ctx:'', body:`<p>Le bouton <strong>Installer</strong> apparaît quand votre navigateur le permet (Chrome, Edge, Android). L’application fonctionne ensuite hors ligne.</p><p>Après une mise à jour, fermez puis rouvrez l’application pour charger la nouvelle version.</p>` },
-  { id:'theme', title:'Thème clair / sombre', ctx:'', body:`<p>Le bouton de l’en-tête bascule entre le mode clair et le mode sombre.</p>` }
+  { id:'demarrer', title:'Démarrer', body:`<ol><li>Créez une fiche avec <strong>Nouvelle fiche</strong> (espèce et variété sont obligatoires).</li><li>Ajoutez-y des cultures par année et suivez leurs étapes.</li><li>Notez vos observations dans le journal de la fiche, avec une photo si besoin.</li><li>Synchronisez avec Google Drive ou faites une sauvegarde régulièrement.</li></ol>` },
+  { id:'accueil', title:'Accueil', body:`<p>Vue d’ensemble de la saison en cours.</p><ul><li><strong>À venir · 30 jours</strong> : les étapes prévues dans le mois.</li><li><strong>Récoltes par année</strong> : graphique des kilos récoltés.</li><li><strong>Dernières notes</strong> : les dernières entrées de vos journaux.</li></ul>` },
+  { id:'lexique', title:'Lexique et fiches', body:`<p>Le lexique liste toutes vos fiches, classées par espèce puis par variété.</p><ul><li>Le champ de recherche accepte une espèce, une variété ou une famille.</li><li>Dans une fiche : cultures et étapes, photos, journal et autres variétés de la même espèce.</li><li>Cliquez sur une photo pour l’agrandir.</li></ul>` },
+  { id:'graines', title:'Stock de graines', body:`<p>Chaque lot est comparé à la durée de conservation recommandée pour l’espèce.</p><ul><li>Le millésime est l’année d’achat ou de récolte.</li><li>La durée de conservation personnalisée (facultative) remplace la durée recommandée.</li><li>Renseignez la date du dernier test de germination pour garder une trace.</li><li>Un lot peut être lié à une fiche.</li></ul>` },
+  { id:'plan', title:'Plan du jardin', body:`<p>Le jardin est une grille de carrés. Les dimensions et la taille des carrés sont affichées en haut du plan.</p><ul><li>Une <strong>zone</strong> regroupe des carrés.</li><li>Une <strong>culture</strong> est placée par année : le plan garde l’historique, utile pour la rotation.</li><li>Changez d’année avec les flèches de la barre du plan.</li></ul>` },
+  { id:'planning', title:'Planning', body:`<p>Douze mois glissants pour les fiches choisies.</p><ul><li><strong>Barres pleines</strong> : périodes retenues (préconisées ou ajustées par vous).</li><li><strong>Barres en pointillés</strong> : période préconisée que vous avez écartée.</li><li><strong>Ronds</strong> : dates réellement réalisées.</li></ul>` },
+  { id:'annuler', title:'Annuler et historique', body:`<ul><li><kbd>Ctrl</kbd>+<kbd>Z</kbd> annule, <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>Z</kbd> rétablit (ou les flèches de l’en-tête).</li><li>Le bouton Historique liste les modifications et permet de revenir plusieurs étapes en arrière.</li></ul>` },
+  { id:'sync', title:'Synchronisation Google Drive', body:`<p>Le bouton <strong>Synchroniser Drive</strong> de la barre de sauvegarde fusionne vos données, <strong>photos en pleine taille comprises</strong>, avec un espace privé de votre Google Drive, puis le met à jour.</p><ul><li>Faites-le sur chaque appareil : en fin de session, et avant de commencer sur l’autre appareil.</li><li>La fusion se fait élément par élément : la modification la plus récente gagne, et les suppressions sont propagées.</li><li>Chaque photo est envoyée une seule fois ; les synchronisations suivantes ne transfèrent que les nouveautés. La première peut être longue : restez sur Wi-Fi.</li><li>Les fichiers sont dans un espace réservé à l’application : ils n’apparaissent pas dans votre Drive et l’application ne voit aucun autre fichier.</li><li>Configuration unique : un ID client OAuth Google (type application Web) avec l’origine de ce site, saisi une fois par appareil.</li></ul>` },
+  { id:'data', title:'Sauvegarde par fichier', body:`<p>Les données sont stockées <strong>localement</strong> dans le navigateur de chaque appareil (IndexedDB). Sans synchronisation Drive, rien n’est partagé entre appareils.</p><ul><li>La barre en haut indique si des modifications ne sont pas sauvegardées.</li><li>« Sauvegarder / Restaurer » exporte ou importe un fichier (ZIP complet avec photos, ou JSON).</li><li>À l’import, choisissez entre fusionner avec les données de l’appareil ou les remplacer.</li><li>Une copie de sécurité d’avant la dernière restauration reste disponible.</li></ul>` },
+  { id:'install', title:'Installer l’application', body:`<p>Le bouton <strong>Installer</strong> apparaît quand votre navigateur le permet (Chrome, Edge, Android). L’application fonctionne ensuite hors ligne.</p><p>Après une mise à jour, fermez puis rouvrez l’application deux fois pour charger la nouvelle version.</p>` },
+  { id:'theme', title:'Thème clair / sombre', body:`<p>Le bouton de l’en-tête bascule entre le mode clair et le mode sombre.</p>` }
 ];
 const HELP_CTX = { home:'accueil', lexique:'lexique', plant:'lexique', graines:'graines', plan:'plan', jardin:'plan', planning:'planning', data:'data' };
 const helpSec = (h, open) => `<details class="card help-sec" id="help-${h.id}" ${open?'open':''}><summary>${esc(h.title)}</summary><div class="help-body">${h.body}</div></details>`;
 function vHelp(){
   return `<div class="main-inner">
     <div class="page-header"><div><h1 class="page-title">Aide</h1><p class="page-sub">Mode d’emploi de Potager Nexus, disponible hors ligne.</p></div></div>
-    <div class="field" style="margin-bottom:var(--space-4)"><label for="help-q">Rechercher dans l’aide</label><input id="help-q" type="search" autocomplete="off" placeholder="Ex. sauvegarde, planning, graines"></div>
+    <div class="field" style="margin-bottom:var(--space-4)"><label for="help-q">Rechercher dans l’aide</label><input id="help-q" type="search" autocomplete="off" placeholder="Ex. sauvegarde, planning, Drive"></div>
     <div style="margin-bottom:var(--space-4)"><button class="btn btn-secondary" data-act="start-tour">${ico('route',18)} Revoir la visite guidée</button></div>
     <div id="help-list">${HELP.map((h,i) => helpSec(h, i===0)).join('')}</div>
     <p class="hint" id="help-none" hidden>Aucun résultat.</p>
@@ -2206,18 +2207,165 @@ const TOUR = [
   { t:'Bienvenue', b:'Potager Nexus est votre carnet de jardin : fiches, cultures, graines, plan et planning. Cette visite dure une minute.' },
   { t:'Créer une fiche', b:'Le bouton « Nouvelle fiche » en haut crée une fiche par variété. Vous y suivez les cultures de chaque année, les photos et le journal.' },
   { t:'Naviguer', b:'Le menu (en bas sur mobile, à gauche sur PC) donne accès à l’accueil, au lexique, aux graines, au plan, au planning et aux données.' },
-  { t:'Sauvegarder', b:'Vos données restent sur cet appareil. Utilisez la barre de sauvegarde pour exporter un fichier JSON, notamment pour passer du PC à Android.' },
+  { t:'Synchroniser', b:'Vos données restent sur cet appareil. Le bouton « Synchroniser Drive » de la barre de sauvegarde les fusionne, photos comprises, avec votre Google Drive pour retrouver les mêmes fiches sur PC et Android.' },
   { t:'Besoin d’aide ?', b:'Le bouton « ? » de l’en-tête ouvre le centre d’aide, et les petits « ? » à côté des titres expliquent chaque écran.' }
 ];
 let tourI = 0;
-const tourSeen = () => { try { return localStorage.getItem('pn_tour_done') === '1'; } catch(e){ return true; } };
-const tourMark = () => { try { localStorage.setItem('pn_tour_done','1'); } catch(e){} };
+const tourSeen = () => { if (state.meta && state.meta.tourDone) return true; try { return localStorage.getItem('pn_tour_done') === '1'; } catch(e){ return false; } };
+const tourMark = () => { state.meta.tourDone = true; persist(false); };
 function showTour(){
   const s = TOUR[tourI], last = tourI === TOUR.length-1;
   openModal(`<h2 id="modal-title">${esc(s.t)}</h2><p class="tour-dots">Étape ${tourI+1} sur ${TOUR.length}</p><p>${esc(s.b)}</p>
     <div class="modal-actions"><button class="btn btn-ghost" data-act="tour-skip">${last?'Fermer':'Passer'}</button>${tourI>0?'<button class="btn btn-secondary" data-act="tour-prev">Précédent</button>':''}${last?'':'<button class="btn btn-primary" data-act="tour-next">Suivant</button>'}</div>`);
 }
 function maybeTour(){ if (tourSeen()) return; tourMark(); tourI = 0; setTimeout(showTour, 500); }
+
+/* =====================================================================
+   Synchronisation Google Drive (dossier privé de l'application)
+   - potager-nexus-sync.json : données (sans images)
+   - photo-<id>.json : une photo (miniature + pleine taille), envoyée une seule fois
+   Envois en mode « resumable » : pas de limite de 5 Mo.
+===================================================================== */
+const DRIVE_CLIENT_ID = '';   // collez ici votre ID client OAuth (ou saisissez-le dans l'application)
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const DRIVE_FILE = 'potager-nexus-sync.json';
+const DRIVE_API = 'https://www.googleapis.com/drive/v3/files';
+const DRIVE_UP = 'https://www.googleapis.com/upload/drive/v3/files';
+const photoName = id => `photo-${id}.json`;
+let driveToken = null, driveTokenExp = 0, driveBusy = false;
+const driveCid = () => (DRIVE_CLIENT_ID || (state.meta && state.meta.driveClientId) || '').trim();
+function loadGIS(){
+  return new Promise((res, rej) => {
+    if (window.google && google.accounts && google.accounts.oauth2) return res();
+    const sc = document.createElement('script'); sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true;
+    sc.onload = () => res(); sc.onerror = () => rej(new Error('Connexion à Google impossible : vérifiez Internet.'));
+    document.head.appendChild(sc);
+  });
+}
+async function driveAuth(){
+  if (driveToken && Date.now() < driveTokenExp) return driveToken;
+  await loadGIS();
+  return new Promise((res, rej) => {
+    const c = google.accounts.oauth2.initTokenClient({
+      client_id: driveCid(), scope: DRIVE_SCOPE,
+      callback: r => {
+        if (r.error) return rej(new Error('Autorisation refusée (' + r.error + ')'));
+        driveToken = r.access_token; driveTokenExp = Date.now() + (Math.max(60, +r.expires_in) - 60) * 1000; res(driveToken);
+      },
+      error_callback: e => rej(new Error('Autorisation annulée ou bloquée' + (e && e.type ? ' (' + e.type + ')' : '')))
+    });
+    c.requestAccessToken(state.meta.driveGranted ? { prompt:'' } : {});
+  });
+}
+async function dfetch(url, opt={}){
+  const r = await fetch(url, { ...opt, headers:{ ...(opt.headers||{}), Authorization:'Bearer ' + driveToken } });
+  if (!r.ok) { if (r.status === 401) driveToken = null; throw new Error('Drive ' + r.status + ' : ' + (await r.text()).slice(0,140)); }
+  return r;
+}
+async function driveList(){
+  const out = {}; let tok = '';
+  do {
+    const u = `${DRIVE_API}?spaces=appDataFolder&fields=nextPageToken,files(id,name)&pageSize=1000${tok ? '&pageToken=' + encodeURIComponent(tok) : ''}`;
+    const j = await (await dfetch(u)).json();
+    (j.files || []).forEach(f => { if (!out[f.name]) out[f.name] = f.id; });
+    tok = j.nextPageToken || '';
+  } while (tok);
+  return out;
+}
+async function driveGetJson(id){ return (await dfetch(`${DRIVE_API}/${id}?alt=media`)).json(); }
+async function driveUpload(name, text, existingId){
+  const meta = existingId ? {} : { name, parents:['appDataFolder'] };
+  const init = await dfetch(`${DRIVE_UP}${existingId ? '/' + existingId : ''}?uploadType=resumable&fields=id`, {
+    method: existingId ? 'PATCH' : 'POST',
+    headers:{ 'Content-Type':'application/json; charset=UTF-8', 'X-Upload-Content-Type':'application/json' },
+    body: JSON.stringify(meta)
+  });
+  const loc = init.headers.get('Location');
+  if (!loc) throw new Error('Drive n’a pas ouvert de session d’envoi.');
+  const r = await fetch(loc, { method:'PUT', headers:{ 'Content-Type':'application/json' }, body:new Blob([text], { type:'application/json' }) });
+  if (!r.ok) throw new Error('Envoi Drive ' + r.status);
+  return (await r.json()).id;
+}
+async function pool(items, n, fn){
+  let i = 0;
+  await Promise.all(Array.from({ length:Math.min(n, items.length) }, async () => { while (i < items.length) { const x = items[i++]; await fn(x); } }));
+}
+function remoteFromPayload(j){
+  const d = j.data || j;
+  if (!d || !Array.isArray(d.plants) || !Array.isArray(d.cultures)) throw new Error('Fichier Drive invalide.');
+  const rem = { plants:d.plants, cultures:d.cultures, beds:d.beds||[], entries:d.entries||[], seeds:d.seeds||[], gardens:d.gardens||[], zones:d.zones||[], cells:d.cells||[], calendars:d.calendars||[], photos:[], tombstones:d.tombstones||{} };
+  for (const rp of (d.photos||[])) if (rp && rp.id) rem.photos.push({ id:rp.id, file:rp.file, ownerType:rp.ownerType, updatedAt:rp.updatedAt, thumb:rp.thumb||null, full:null });
+  return rem;
+}
+function setSyncStatus(msg, kind){
+  const el = $('#sync-status');
+  if (el) { el.className = 'alert' + (kind ? ' ' + kind : ''); el.querySelector('span').textContent = msg; } else toast(msg);
+}
+async function driveSync(){
+  if (driveBusy) return;
+  driveBusy = true; document.querySelectorAll('[data-act="drive-sync"]').forEach(b => b.disabled = true);
+  try {
+    if (!driveCid()) throw new Error('Renseignez d’abord l’ID client Google.');
+    setSyncStatus('Connexion à Google…');
+    await driveAuth(); state.meta.driveGranted = true;
+    setSyncStatus('Lecture de Drive…');
+    const files = await driveList();
+    const mainId = files[DRIVE_FILE];
+    const remoteMeta = {};
+    let sum = { added:0, updated:0, removed:0 };
+    if (mainId) {
+      const j = await driveGetJson(mainId);
+      ((j.data || j).photos || []).forEach(rp => { if (rp && rp.id) remoteMeta[rp.id] = rp; });
+      const { merged, stats } = mergeStates(state, remoteFromPayload(j));
+      backupAvailable = await DB.set('backup', { savedAt:nowISO(), state });
+      state = { ...merged, meta:state.meta };
+      Object.values(stats).forEach(x => { sum.added += x.added; sum.updated += x.updated; sum.removed += x.removed; });
+    }
+    const down = state.photos.filter(p => (!p.full || !p.thumb) && files[photoName(p.id)]);
+    let n = 0;
+    await pool(down, 3, async p => {
+      const d = await driveGetJson(files[photoName(p.id)]);
+      p.thumb = p.thumb || d.thumb || null; p.full = p.full || d.full || null;
+      setSyncStatus(`Photos reçues : ${++n}/${down.length}`);
+    });
+    state.photos = state.photos.filter(p => p.thumb || p.full || files[photoName(p.id)]);
+    const up = state.photos.filter(p => {
+      if (!(p.thumb || p.full)) return false;
+      const rm = remoteMeta[p.id];
+      return !files[photoName(p.id)] || (rm && ((p.full && rm.hasFull === false) || (p.updatedAt || '') > (rm.updatedAt || '')));
+    });
+    n = 0;
+    await pool(up, 2, async p => {
+      const name = photoName(p.id);
+      const id = await driveUpload(name, JSON.stringify({ id:p.id, file:p.file, ownerType:p.ownerType, updatedAt:p.updatedAt, thumb:p.thumb||null, full:p.full||null }), files[name]);
+      files[name] = id;
+      setSyncStatus(`Photos envoyées : ${++n}/${up.length}`);
+    });
+    for (const [name, fid] of Object.entries(files)) {
+      const m = /^photo-(.+)\.json$/.exec(name);
+      if (m && state.tombstones[m[1]] && !state.photos.some(p => p.id === m[1])) { try { await dfetch(`${DRIVE_API}/${fid}`, { method:'DELETE' }); } catch(e){} }
+    }
+    setSyncStatus('Envoi des données…');
+    await driveUpload(DRIVE_FILE, JSON.stringify(exportPayload(false)), mainId);
+    state.meta.lastSyncAt = nowISO(); state.meta.dirty = false;
+    persist(false); render();
+    const msg = `Synchronisé. Reçu : ${sum.added} ajout(s), ${sum.updated} mise(s) à jour, ${sum.removed} suppression(s) ; photos reçues ${down.length}, envoyées ${up.length}.`;
+    if ($('#sync-status')) { setSyncStatus(msg, 'ok'); const l = $('#sync-last'); if (l) l.textContent = fmtDT(state.meta.lastSyncAt); } else toast(msg);
+  } catch(e) {
+    setSyncStatus(e.message || 'Échec de la synchronisation', 'bad');
+  } finally {
+    driveBusy = false; document.querySelectorAll('[data-act="drive-sync"]').forEach(b => b.disabled = false);
+  }
+}
+function openSync(){
+  const m = state.meta, fixed = !!DRIVE_CLIENT_ID;
+  openModal(`<h2 id="modal-title">Synchroniser avec Google Drive</h2>
+    <p class="hint" style="margin-bottom:var(--space-3)">Fusionne les données et les photos (pleine taille) de cet appareil avec celles de Drive : la modification la plus récente gagne. Chaque photo n’est transférée qu’une fois ; la première synchronisation peut être longue, restez sur Wi-Fi.</p>
+    <div class="alert" id="sync-status" role="status">${ico('cloud',18)}<span>${m.lastSyncAt ? 'Dernière synchronisation : ' + esc(fmtDT(m.lastSyncAt)) + '.' : 'Jamais synchronisé sur cet appareil.'}</span></div>
+    ${fixed ? '' : `<div class="field"><label for="drive-cid">ID client Google (OAuth, type application Web)</label><input class="input" id="drive-cid" value="${esc(m.driveClientId||'')}" autocomplete="off" placeholder="xxxx.apps.googleusercontent.com"><span class="hint">À saisir une fois par appareil. Voir l’aide « Synchronisation Google Drive ».</span></div><div style="margin-bottom:var(--space-3)"><button class="btn btn-secondary" data-act="drive-save-id">Enregistrer l’ID</button></div>`}
+    <p class="hint">Dernière synchro : <span id="sync-last">${m.lastSyncAt ? esc(fmtDT(m.lastSyncAt)) : '—'}</span></p>
+    <div class="modal-actions"><button class="btn btn-secondary" data-act="close">Fermer</button><button class="btn btn-primary" data-act="drive-sync">${ico('refresh-cw',18)} Synchroniser maintenant</button></div>`);
+}
 Object.assign(actions, {
   'goto-help': () => { closeModal(); location.hash = '#/aide'; },
   'help-ctx': el => {
@@ -2228,7 +2376,10 @@ Object.assign(actions, {
   'start-tour': () => { tourI = 0; showTour(); },
   'tour-next': () => { tourI = Math.min(tourI+1, TOUR.length-1); showTour(); },
   'tour-prev': () => { tourI = Math.max(tourI-1, 0); showTour(); },
-  'tour-skip': () => { tourMark(); closeModal(); }
+  'tour-skip': () => { tourMark(); closeModal(); },
+  'open-sync': () => openSync(),
+  'drive-save-id': () => { const v = (($('#drive-cid')||{}).value || '').trim(); state.meta.driveClientId = v; driveToken = null; persist(false); setSyncStatus(v ? 'ID enregistré.' : 'ID effacé.', v ? 'ok' : ''); },
+  'drive-sync': () => driveSync()
 });
 
 /* =====================================================================

@@ -1,4 +1,4 @@
-const VERSION = 'potager-nexus-v13';
+const VERSION = 'potager-nexus-v15';
 
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
